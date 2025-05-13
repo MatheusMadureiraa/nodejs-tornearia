@@ -1,16 +1,16 @@
 # Sistema para Tornearia
-> ⚠️⚠️ Esse sistema está passando por adição de novas funcionalidades ⚠️⚠️
-> ⚠️⚠️ Por conta disso e segurança, o código doi removido, por enquanto, desse repositório público. ⚠️⚠️
+> ⚠️⚠️ Esse sistema está passando por adição de novas funcionalidades.
+> Por conta disso e segurança, o código doi removido, por enquanto, desse repositório público. ⚠️⚠️
 
 <p align="center">
-  <img src="./assets/home.png" width="80%" alt="Home"/>
+  <img src="./assets/home.png" width="90%" alt="Home"/>
 </p>
 <p align="center">
-  <img src="./assets/cadastro-servico.png" width="45%" alt="Cadastro Serviço"/>
-  <img src="./assets/clientes.png" width="45%" alt="Clientes"/>
+  <img src="./assets/cadastro-servico.png" width="45%" height="300px" alt="Cadastro Serviço"/>
+  <img src="./assets/clientes.png" width="45%" height="300px" alt="Clientes"/>
 </p>
 <p align="center">
-  <img src="./assets/servicos.png" width="80%" alt="Serviços"/>
+  <img src="./assets/servicos.png" width="90%" alt="Serviços"/>
 </p>
 
 ## 🛠️ Sobre o Projeto
