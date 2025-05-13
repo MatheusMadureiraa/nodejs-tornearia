@@ -3,15 +3,14 @@
 > ⚠️⚠️ Por conta disso e segurança, o código doi removido, por enquanto, desse repositório público. ⚠️⚠️
 
 <p align="center">
-  <img src="./assets/home.png" width="80%" alt="Tela Home"/>
+  <img src="./assets/home.png" width="80%" alt="Home"/>
 </p>
 <p align="center">
-  <img src="./assets/cadastro-servico.png" width="45%" alt="Cadastro de Serviço"/>
+  <img src="./assets/cadastro-servico.png" width="45%" alt="Cadastro Serviço"/>
   <img src="./assets/clientes.png" width="45%" alt="Clientes"/>
 </p>
 <p align="center">
-  <img src="./assets/servicos.png" width="45%" alt="Serviços"/>
-  <img src="./assets/pedidos.png" width="45%" alt="Pedidos"/>
+  <img src="./assets/servicos.png" width="80%" alt="Serviços"/>
 </p>
 
 ## 🛠️ Sobre o Projeto
