@@ -3,8 +3,7 @@
 > ⚠️⚠️ Por conta disso e segurança, o código doi removido, por enquanto, desse repositório público. ⚠️⚠️
 
 <p align="center">
-  <img src="./assets/home.png" width="45%" alt="Tela Home"/>
-  <img src="./assets/cadastro-pedido.png" width="45%" alt="Cadastro de Pedido"/>
+  <img src="./assets/home.png" width="80%" alt="Tela Home"/>
 </p>
 <p align="center">
   <img src="./assets/cadastro-servico.png" width="45%" alt="Cadastro de Serviço"/>
