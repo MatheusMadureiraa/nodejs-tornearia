@@ -1,18 +1,18 @@
 # Sistema para Tornearia
-| ⚠️⚠️ Esse sistema está passando por adição de novas funcionalidades ⚠️⚠️
-| ⚠️⚠️ Por conta disso e segurança, o código doi removido, por enquanto, desse repositório público. ⚠️⚠️
+> ⚠️⚠️ Esse sistema está passando por adição de novas funcionalidades ⚠️⚠️
+> ⚠️⚠️ Por conta disso e segurança, o código doi removido, por enquanto, desse repositório público. ⚠️⚠️
 
 <p align="center">
-  <img src="./assets/home.png" width="48%" alt="Tela Home"/>
-  <img src="./assets/cadastro-pedido.png" width="48%" alt="Cadastro de Pedido"/>
+  <img src="./assets/home.png" width="45%" alt="Tela Home"/>
+  <img src="./assets/cadastro-pedido.png" width="45%" alt="Cadastro de Pedido"/>
 </p>
 <p align="center">
-  <img src="./assets/cadastro-servico.png" width="48%" alt="Cadastro de Serviço"/>
-  <img src="./assets/clientes.png" width="48%" alt="Clientes"/>
+  <img src="./assets/cadastro-servico.png" width="45%" alt="Cadastro de Serviço"/>
+  <img src="./assets/clientes.png" width="45%" alt="Clientes"/>
 </p>
 <p align="center">
-  <img src="./assets/servicos.png" width="48%" alt="Serviços"/>
-  <img src="./assets/pedidos.png" width="48%" alt="Pedidos"/>
+  <img src="./assets/servicos.png" width="45%" alt="Serviços"/>
+  <img src="./assets/pedidos.png" width="45%" alt="Pedidos"/>
 </p>
 
 ## 🛠️ Sobre o Projeto
