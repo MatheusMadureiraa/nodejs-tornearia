@@ -6,7 +6,7 @@
   "scripts": {
     "start": "electron .",
     "server": "node backend/server.js",
-    "dev": "electronmon main.js"
+    "dev": "npm start"
   },
   "author": "Matheus Madureira",
   "license": "MIT",
