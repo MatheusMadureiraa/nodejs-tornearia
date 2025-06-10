@@ -5,34 +5,141 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Relatórios - Vallim Tornearia</title>
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js/dist/Chart.min.css">
-    <link rel="stylesheet" href="../public//css/relatorio.css">
+    <link rel="stylesheet" href="../public/css/relatorio.css">
     <link rel="stylesheet" href="../public/css/sidebar.css">
+    <link rel="stylesheet" href="../public/css/styles.css">
 </head>
 <body>
     <div id="sidebar-container"></div>
 
     <div class="dashboard-container">
-        <h1>Relatório de Acompanhamento</h1>
+        <div class="dashboard-header">
+            <h1>Dashboard - Relatório Gerencial</h1>
+            <div class="dashboard-actions">
+                <button id="btnAtualizar" class="btn-action">🔄 Atualizar</button>
+                <button class="exportar" id="exportPDF">📄 Exportar PDF</button>
+            </div>
+        </div>
+
+        <!-- Loading e Error -->
+        <div id="loading" class="loading" style="display: none;">
+            <p>Carregando dados...</p>
+        </div>
+        <div id="error-message" class="error-message" style="display: none;"></div>
+
+        <!-- Cards de Estatísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-content">
+                    <h3>Total de Clientes</h3>
+                    <p id="total-clientes">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🔧</div>
+                <div class="stat-content">
+                    <h3>Total de Serviços</h3>
+                    <p id="total-servicos">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📦</div>
+                <div class="stat-content">
+                    <h3>Total de Pedidos</h3>
+                    <p id="total-pedidos">0</p>
+                </div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-icon">💰</div>
+                <div class="stat-content">
+                    <h3>Faturamento Total</h3>
+                    <p id="faturamento-total">R$ 0,00</p>
+                </div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-icon">💸</div>
+                <div class="stat-content">
+                    <h3>Gastos com Materiais</h3>
+                    <p id="gastos-total">R$ 0,00</p>
+                </div>
+            </div>
+            <div class="stat-card info">
+                <div class="stat-icon">📈</div>
+                <div class="stat-content">
+                    <h3>Lucro Estimado</h3>
+                    <p id="lucro-estimado">R$ 0,00</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Controles do Gráfico Principal -->
         <div class="dashboard-controls">
             <div class="filter-box">
-                <label for="chartType">Selecionar gráfico:</label>
+                <label for="chartType">Selecionar análise:</label>
                 <select id="chartType">
-                    <option value="faturamento">Faturamento</option>
+                    <option value="faturamento">Faturamento Mensal</option>
                     <option value="servicos">Número de Serviços</option>
                     <option value="materiais">Gastos com Materiais</option>
                 </select>
             </div>
-            <button class="exportar" id="exportPDF">Exportar gráfico em PDF</button>
         </div>
 
-        <div id="chart-container">
+        <!-- Gráfico Principal -->
+        <div class="chart-container main-chart">
             <canvas id="dashboardChart"></canvas>
+        </div>
+
+        <!-- Grid de Gráficos Secundários -->
+        <div class="charts-grid">
+            <!-- Status dos Serviços -->
+            <div class="chart-container">
+                <canvas id="statusServicosChart"></canvas>
+                <div class="chart-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Pendentes:</span>
+                        <span id="servicos-pendentes" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Em Andamento:</span>
+                        <span id="servicos-andamento" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Concluídos:</span>
+                        <span id="servicos-concluidos" class="stat-value">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Status dos Pagamentos -->
+            <div class="chart-container">
+                <canvas id="statusPagamentosChart"></canvas>
+                <div class="chart-stats">
+                    <div class="stat-item">
+                        <span class="stat-label">Pendentes:</span>
+                        <span id="pagamentos-pendentes" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Parciais:</span>
+                        <span id="pagamentos-parciais" class="stat-value">0</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-label">Completos:</span>
+                        <span id="pagamentos-completos" class="stat-value">0</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Top Clientes -->
+            <div class="chart-container full-width">
+                <canvas id="topClientesChart"></canvas>
+            </div>
         </div>
     </div>
 
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="../scripts/relatorio.js"></script>
+    <script type="module" src="../scripts/relatorio.js"></script>
     <script src="./renderer.js"></script>
 </body>
 </html>
