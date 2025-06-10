@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pedidos - Vallim Tornearia</title>
+    <link rel="stylesheet" href="../public/css/sidebar.css">
+    <link rel="stylesheet" href="../public/css/styles.css">
+    <link rel="stylesheet" href="../public/css/lists.css">
+    <link rel="stylesheet" href="../public/css/modal.css">
+</head>
+<body>
+    <div id="sidebar-container"></div>
+
+    <div class="table-container">
+        <h1>Lista de Pedidos</h1>
+        <div class="table-controls">
+            <div class="search-box">
+                <img src="../public/assets/icons/search.svg" alt="Buscar" class="search-icon">
+                <input type="text" id="search-input" placeholder="Procurar pedido...">
+                <img src="../public/assets/icons/close.svg" alt="Limpar" class="clear-icon">
+            </div>
+
+            <div class="filter-container">
+                <label for="entries" class="filter-label">Ordenar por:</label>
+                <select id="entries" class="filter-select">
+                    <option value="6">Data (mais recente)</option>
+                    <option value="5">Data (mais antiga)</option>
+                    <option value="3">Quantidade</option>
+                    <option value="4">Valor</option>
+                </select>
+            </div>
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Nome Material</th>
+                    <th>Fornecedor</th>
+                    <th>Quantidade</th>
+                    <th>Valor</th>
+                    <th>Data</th>
+                    <th id="acao-coluna"></th>
+                </tr>
+            </thead>
+            <tbody id="tabela-pedidos">
+            <!-- pedidos serão adicionados dinamicamente aqui -->
+            </tbody>
+
+            <!-- template para os pedidos -->
+            <template id="pedido-template">
+                <tr>
+                    <td class="nome-material"></td>
+                    <td class="fornecedor"></td>
+                    <td class="quantidade"></td>
+                    <td class="valor"></td>
+                    <td class="data"></td>
+                    <td class="acoes">
+                        <div class="menu-container">
+                            <div class="menu-dropdown">
+                                <button class="detalhes">Ver Detalhes</button>
+                                <button class="editar">Editar Pedido</button>
+                                <button class="excluir">Excluir Pedido</button>
+                            </div>
+                        </div>
+                    </td>
+                </tr>
+            </template>
+        </table>
+
+        <div class="pagination">
+            <button class="prev">Anterior</button>
+            <span class="page-numbers">1, 2, 3 ...</span>
+            <button class="next">Próximo</button>
+        </div>
+    </div>
+
+    <!--vizualizar o modal (esta invisivel/none por padrao)-->
+    <div id="modal-detalhes" class="modal">
+        <div class="modal-conteudo">
+            <span class="fechar" onclick="fecharModal()">&times;</span>
+            <div id="detalhes-container"></div>
+        </div>
+    </div>
+
+    <div id="alert-container"></div>
+
+
+    <script type="module" src="./renderer.js"></script>
+    <script type="module" src="../scripts/pedidos.js"></script>
+    <script type="module" src="../scripts/utils/menuList.js"></script>
+</body>
+</html>

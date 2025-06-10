@@ -1,0 +1,10 @@
+
+POST http://localhost:3500/servicos
+Content-Type: application/json
+
+{
+    "nomeServico": "Testando servico apos add array",
+    "preco": "100",
+    "nomeCliente": "Cliente novo 001"
+}
+

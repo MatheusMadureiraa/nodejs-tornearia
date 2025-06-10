@@ -1,0 +1,203 @@
+.modal {
+    display: none; 
+    position: fixed; 
+    z-index: 1000;
+    left: 0;
+    top: 0;
+    width: 100%; 
+    height: 100%; 
+    overflow-y: auto; 
+    background-color: rgba(0,0,0,0.65);
+    padding-top: 40px; /* Reduzido para telas menores */
+    padding-bottom: 40px;
+    box-sizing: border-box;
+}
+
+.modal-conteudo {
+    background-color: #ffffff;
+    margin: auto; 
+    padding: 20px 25px; 
+    border: none;
+    width: 90%; 
+    max-width: 550px;
+    border-radius: 8px; 
+    box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+    position: relative;
+}
+
+.modal-conteudo h3 {
+    text-align: center;
+    color: #018c18; 
+    margin-top: 5px; 
+    margin-bottom: 20px; 
+    font-size: 1.4em; 
+}
+
+.fechar {
+    position: absolute;
+    top: 12px;
+    right: 15px;
+    font-size: 1.6rem; 
+    font-weight: bold;
+    color: #888; 
+    cursor: pointer;
+    line-height: 1;
+    padding: 0 5px;
+}
+.fechar:hover {
+    color: #555;
+}
+
+.lista-detalhes { 
+    list-style: none;
+    padding-left: 0;
+    margin-bottom: 20px;
+}
+
+.li-modal {
+    padding: 8px 0; 
+    border-bottom: 1px solid #eeeeee; 
+    font-size: 0.9rem;
+    line-height: 1.5;
+}
+.li-modal:last-child {
+    border-bottom: none;
+}
+.li-modal strong {
+    color: #495057;
+    margin-right: 6px; 
+}
+.li-modal em { 
+    color: #6c757d;
+    font-style: italic;
+}
+
+.form-modal-edicao .form-group {
+    margin-bottom: 0.9rem;
+}
+
+.form-modal-edicao label {
+    display: block; 
+    margin-bottom: 0.3rem; 
+    font-weight: 500;
+    font-size: 0.85rem;
+    color: #212529;
+}
+
+.form-modal-edicao .input-edicao {
+    width: 100%; 
+    padding: 9px 12px; 
+    border: 1px solid #ced4da; 
+    border-radius: 4px; 
+    box-sizing: border-box; 
+    font-size: 0.95rem;
+    color: #495057; 
+    background-color: #fff;
+    transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out;
+}
+.form-modal-edicao .input-edicao:focus {
+    border-color: #018c18; 
+    outline: 0;
+    box-shadow: 0 0 0 0.15rem rgba(1, 140, 24, 0.2); 
+}
+
+.form-modal-edicao .id-form {
+    width: 100%; 
+    padding: 9px 12px; 
+    border: 1px solid #dee2e6;
+    border-radius: 4px; 
+    box-sizing: border-box; 
+    font-size: 0.95rem;
+    background-color: #e9ecef;
+    color: #6c757d;
+    cursor: not-allowed; 
+    font-style: italic;
+}
+.form-modal-edicao .id-form:focus {
+    border-color: #dee2e6;
+    box-shadow: none;
+}
+
+.form-modal-edicao textarea.input-edicao {
+    resize: vertical; 
+    min-height: 70px; 
+    line-height: 1.4;
+}
+
+.form-actions { 
+    margin-top: 20px;
+    padding-top: 15px; 
+    border-top: 1px solid #e9ecef; 
+    display: flex; 
+    justify-content: flex-end; 
+    gap: 8px;
+}
+
+.button-modal, .button-send { 
+    padding: 7px 13px;
+    border: none;
+    border-radius: 4px; 
+    cursor: pointer;
+    font-weight: 500;
+    transition: background-color 0.2s ease, opacity 0.2s ease, transform 0.1s ease;
+}
+.button-modal:hover, .button-send:hover {
+    opacity: 0.7; 
+}
+.button-modal:active, .button-send:active {
+    transform: translateY(1px);
+}
+
+.button-edit {
+    background-color: #ffc107; 
+    color: #212529;
+}
+.button-delete {
+    background-color: #dc3545; 
+    color: white;
+}
+.button-close {
+    background-color: #6c757d; 
+    color: white;
+}
+.button-send {
+    background-color: #018c18; 
+    color: white;
+}
+
+
+/*RESPONSIVIDADE*/
+@media (max-width: 768px) {
+    .modal-conteudo {
+        max-width: 95%;
+        padding: 20px 20px;
+    }
+}
+
+@media (max-width: 480px) { 
+    .modal-conteudo {
+        margin-top: 20px;
+        margin-bottom: 20px;
+        padding: 15px;
+    }
+    .modal-conteudo h3 {
+        font-size: 1.2em;
+        margin-bottom: 15px;
+    }
+    .form-modal-edicao .input-edicao, .form-modal-edicao .id-form {
+        padding: 8px 10px;
+        font-size: 0.9rem;
+    }
+    .form-actions {
+        flex-direction: column;
+        gap: 10px;
+    }
+    .form-actions button {
+        width: 100%; 
+        margin-left: 0;
+    }
+    .button-modal, .button-send {
+        padding: 10px 15px;
+        font-size: 0.9rem;
+    }
+}

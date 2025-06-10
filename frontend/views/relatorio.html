@@ -1,0 +1,38 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Relatórios - Vallim Tornearia</title>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/chart.js/dist/Chart.min.css">
+    <link rel="stylesheet" href="../public//css/relatorio.css">
+    <link rel="stylesheet" href="../public/css/sidebar.css">
+</head>
+<body>
+    <div id="sidebar-container"></div>
+
+    <div class="dashboard-container">
+        <h1>Relatório de Acompanhamento</h1>
+        <div class="dashboard-controls">
+            <div class="filter-box">
+                <label for="chartType">Selecionar gráfico:</label>
+                <select id="chartType">
+                    <option value="faturamento">Faturamento</option>
+                    <option value="servicos">Número de Serviços</option>
+                    <option value="materiais">Gastos com Materiais</option>
+                </select>
+            </div>
+            <button class="exportar" id="exportPDF">Exportar gráfico em PDF</button>
+        </div>
+
+        <div id="chart-container">
+            <canvas id="dashboardChart"></canvas>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="../scripts/relatorio.js"></script>
+    <script src="./renderer.js"></script>
+</body>
+</html>

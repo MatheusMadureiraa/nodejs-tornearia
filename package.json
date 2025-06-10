@@ -1,0 +1,23 @@
+{
+  "name": "tornearia-vallim",
+  "version": "1.0.0",
+  "description": "Aplicativo desktop com Electron, SQLite3, Express, CORS e Dotenv",
+  "main": "main.js",
+  "scripts": {
+    "start": "electron .",
+    "server": "node backend/server.js",
+    "dev": "electronmon main.js"
+  },
+  "author": "Matheus Madureira",
+  "license": "MIT",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.4.5",
+    "express": "^4.18.4",
+    "sqlite3": "5.0.2"
+  },
+  "devDependencies": {
+    "electron": "16.0.0",
+    "electronmon": "^2.0.3"
+  }
+}

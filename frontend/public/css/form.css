@@ -1,0 +1,111 @@
+body {
+    display: flex;
+    flex-direction: column;
+    justify-content: start;
+    align-items: center;
+    background-color: #f4f4f4;
+}
+
+h1 {
+    font-size: max(20px, 2vw);
+    margin-bottom: 15px;
+    color: #333;
+}
+
+.form-add {
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+    align-content: center;
+    background: white;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0px 4px 10px rgba(0, 0, 0, 0.2);
+    width: max(350px, 35vw);
+    height: max(85vh, 700px);
+}
+
+.form-add label {
+    font-size: max(16px, 2.3vh);
+    font-weight: bold;
+    margin-top: 15px;
+}
+
+.form-add input, .form-add select, .form-add textarea {
+    font-size: max(12px, 1vw);
+    padding: 5px;
+    margin-top: 3px;
+    border: 1px solid #ccc;
+    border-radius: 2px;
+}
+
+.form-add button {
+    background-color: #018c18;
+    width: 100%;
+    color: white;
+    border: none;
+    padding: 10px;
+    margin-top: 20px;
+    border-radius: 5px;
+    cursor: pointer;
+    font-size: max(14px, 1.5vw);
+    transition: 0.3s;
+}
+
+.form-add button:hover {
+    transform: scale(1.02);
+    background-color: black;
+}
+
+.form-add button {
+    align-self: flex-start;
+}
+
+#sair {
+    position: fixed;
+    bottom: 20px;
+    width: max(50px, 5vw);
+    left: 20px;
+    background-color: #ccc;
+    color: black;
+    border: none;
+    padding: 10px 10px;
+    border-radius: 5px;
+    cursor: pointer;
+
+}
+
+#sair:hover {
+    animation: jump 0.5s infinite alternate ease-in-out;
+}
+
+@keyframes jump {
+    0% {
+        transform: scale(1.1);
+    }100% {
+        transform: scale(1);
+    }
+}
+
+.file-upload {
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+}
+
+.custom-file-label {
+    background-color: #ccc;
+    padding: 5px 10px;
+    border-radius: 3px;
+    cursor: pointer;
+}
+
+.custom-file-label:hover {
+    background-color: #bbb;
+}
+
+span{
+    font-size: max(12px, 1vw);
+    color: rgb(0, 0, 0);
+    margin-top: 5px;
+}
