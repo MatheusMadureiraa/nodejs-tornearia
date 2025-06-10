@@ -1,5 +1,3 @@
-// Utilitários para processamento de dados do dashboard
-
 // Processar dados de faturamento por mês
 function processarFaturamentoPorMes(servicos) {
     const faturamentoPorMes = new Array(12).fill(0);
@@ -175,7 +173,7 @@ function obterTopClientes(servicos, clientes) {
         .map(([id, faturamento]) => {
             const cliente = clientes.find(c => c.idCliente == id);
             return {
-                nome: cliente ? cliente.nomeCliente : `Cliente ${id}`,
+                nome: cliente ? cliente.nomeCliente : `Desconhecido`,
                 faturamento: faturamento
             };
         })

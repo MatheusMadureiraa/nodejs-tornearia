@@ -13,65 +13,13 @@
     <div id="sidebar-container"></div>
 
     <div class="dashboard-container">
-        <div class="dashboard-header">
-            <h1>Dashboard - Relatório Gerencial</h1>
-            <div class="dashboard-actions">
-                <button id="btnAtualizar" class="btn-action">🔄 Atualizar</button>
-                <button class="exportar" id="exportPDF">📄 Exportar PDF</button>
-            </div>
-        </div>
+        <h1>Relatório Gerencial</h1>
 
         <!-- Loading e Error -->
         <div id="loading" class="loading" style="display: none;">
             <p>Carregando dados...</p>
         </div>
         <div id="error-message" class="error-message" style="display: none;"></div>
-
-        <!-- Cards de Estatísticas -->
-        <div class="stats-grid">
-            <div class="stat-card">
-                <div class="stat-icon">👥</div>
-                <div class="stat-content">
-                    <h3>Total de Clientes</h3>
-                    <p id="total-clientes">0</p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">🔧</div>
-                <div class="stat-content">
-                    <h3>Total de Serviços</h3>
-                    <p id="total-servicos">0</p>
-                </div>
-            </div>
-            <div class="stat-card">
-                <div class="stat-icon">📦</div>
-                <div class="stat-content">
-                    <h3>Total de Pedidos</h3>
-                    <p id="total-pedidos">0</p>
-                </div>
-            </div>
-            <div class="stat-card success">
-                <div class="stat-icon">💰</div>
-                <div class="stat-content">
-                    <h3>Faturamento Total</h3>
-                    <p id="faturamento-total">R$ 0,00</p>
-                </div>
-            </div>
-            <div class="stat-card warning">
-                <div class="stat-icon">💸</div>
-                <div class="stat-content">
-                    <h3>Gastos com Materiais</h3>
-                    <p id="gastos-total">R$ 0,00</p>
-                </div>
-            </div>
-            <div class="stat-card info">
-                <div class="stat-icon">📈</div>
-                <div class="stat-content">
-                    <h3>Lucro Estimado</h3>
-                    <p id="lucro-estimado">R$ 0,00</p>
-                </div>
-            </div>
-        </div>
 
         <!-- Controles do Gráfico Principal -->
         <div class="dashboard-controls">
@@ -83,6 +31,9 @@
                     <option value="materiais">Gastos com Materiais</option>
                 </select>
             </div>
+            <div class="dashboard-actions">
+                <button class="exportar" id="exportPDF">Exportar p/ PDF</button>
+            </div>
         </div>
 
         <!-- Gráfico Principal -->
@@ -90,7 +41,48 @@
             <canvas id="dashboardChart"></canvas>
         </div>
 
+        <!-- Cards de Estatísticas -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Total de Clientes</h3>
+                    <p id="total-clientes">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Total de Serviços</h3>
+                    <p id="total-servicos">0</p>
+                </div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-content">
+                    <h3>Total de Pedidos</h3>
+                    <p id="total-pedidos">0</p>
+                </div>
+            </div>
+            <div class="stat-card success">
+                <div class="stat-content">
+                    <h3>Faturamento Total</h3>
+                    <p id="faturamento-total">R$ 0,00</p>
+                </div>
+            </div>
+            <div class="stat-card warning">
+                <div class="stat-content">
+                    <h3>Gastos com Materiais</h3>
+                    <p id="gastos-total">R$ 0,00</p>
+                </div>
+            </div>
+            <div class="stat-card info">
+                <div class="stat-content">
+                    <h3>Lucro Estimado</h3>
+                    <p id="lucro-estimado">R$ 0,00</p>
+                </div>
+            </div>
+        </div>
+
         <!-- Grid de Gráficos Secundários -->
+        <h2>Informações extras:</h2>
         <div class="charts-grid">
             <!-- Status dos Serviços -->
             <div class="chart-container">
