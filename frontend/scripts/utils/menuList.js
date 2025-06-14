@@ -1,7 +1,10 @@
 import { editarClientePorId, excluirClientePorId, listarClientePorId } from '../api/clientesApi.js';
 import { editarPedidoPorId, excluirPedidoPorId, listarPedidoPorId } from '../api/pedidosApi.js';
-import { editarServicoPorId, excluirServicoPorId, listarServicoPorId } from '../api/servicosApi.js'; // Certifique-se que esta importação está correta
+import { editarServicoPorId, excluirServicoPorId, listarServicoPorId } from '../api/servicosApi.js';
 import { showAlert } from './alerts.js';
+
+// Variável para controlar o estado de submissão
+let isSubmitting = false;
 
 function formatarTexto(texto) {
     if (typeof texto !== 'string') return '';
@@ -12,14 +15,25 @@ function fecharModal() {
     const modal = document.getElementById("modal-detalhes");
     if (modal) modal.style.display = "none";
     const container = document.getElementById("detalhes-container");
-    if (container) container.innerHTML = ""; // Limpa o conteúdo ao fechar
+    if (container) container.innerHTML = "";
+    
+    // Reset do estado de submissão
+    isSubmitting = false;
+}
+
+// Função para recarregar a lista após operações
+function recarregarLista() {
+    // Força o reload da página para atualizar os dados
+    setTimeout(() => {
+        window.location.reload();
+    }, 1000);
 }
 
 // auxiliar para obter dados do item com base na rota
 async function obterDadosItem(idRota, id) {
     if (idRota === 'idCliente') return await listarClientePorId(id);
     if (idRota === 'idPedido') return await listarPedidoPorId(id);
-    if (idRota === 'idServico') return await listarServicoPorId(id); // Adicionado para clareza
+    if (idRota === 'idServico') return await listarServicoPorId(id);
 
     console.warn(`idRota '${idRota}' não corresponde a cliente, pedido ou serviço. Verifique o valor passado.`);
     throw new Error(`Tipo de rota desconhecido: ${idRota}`);
@@ -32,7 +46,6 @@ function obterRotaLabel(idRota) {
     return "Item"; 
 }
 
-
 async function verDetalhes(idRota, id) {
     const rotaLabel = obterRotaLabel(idRota);
     try {
@@ -41,13 +54,19 @@ async function verDetalhes(idRota, id) {
 
         const info = Array.isArray(response.data) ? response.data[0] : response.data;
         if (!info) {
-            await showAlert({ message: `Nenhuma informação encontrada para ${rotaLabel} com ID ${id}.`, type: "error", icon: "../public/assets/icons/error.svg" });
+            await showAlert({ 
+                message: `Nenhuma informação encontrada para ${rotaLabel} com ID ${id}.`, 
+                type: "error", 
+                icon: "../public/assets/icons/error.svg" 
+            });
             return;
         }
 
         const detalhesHtml = Object.entries(info)
             .map(([chave, valor]) => {
-                const valorFormatado = valor === null || valor === undefined ? "<em>Não cadastrado(a)</em>" : (typeof valor === 'object' ? JSON.stringify(valor, null, 2) : valor);
+                const valorFormatado = valor === null || valor === undefined ? 
+                    "<em>Não cadastrado(a)</em>" : 
+                    (typeof valor === 'object' ? JSON.stringify(valor, null, 2) : valor);
                 return `<li class="li-modal"><strong>${formatarTexto(chave)}:</strong> ${valorFormatado}</li>`;
             })
             .join("");
@@ -68,7 +87,11 @@ async function verDetalhes(idRota, id) {
 
     } catch (err) {
         console.error(`Erro ao listar detalhes para ${rotaLabel} ID ${id}:`, err);
-        await showAlert({ message: `Erro ao carregar detalhes do ${rotaLabel}. Tente novamente.`, type: "error", icon: "../public/assets/icons/error.svg" });
+        await showAlert({ 
+            message: `Erro ao carregar detalhes do ${rotaLabel}. Tente novamente.`, 
+            type: "error", 
+            icon: "../public/assets/icons/error.svg" 
+        });
     }
 }
 
@@ -114,6 +137,11 @@ function criarCampoFormulario(chave, valor) {
 }
 
 async function editarItem(idRota, id) {
+    if (isSubmitting) {
+        console.log('Operação já em andamento, ignorando...');
+        return;
+    }
+
     const rotaLabel = obterRotaLabel(idRota);
     try {
         const responseApi = await obterDadosItem(idRota, id);
@@ -121,7 +149,11 @@ async function editarItem(idRota, id) {
 
         const informacao = Array.isArray(responseApi.data) ? responseApi.data[0] : responseApi.data;
         if (!informacao) {
-            await showAlert({ message: `Nenhuma informação para editar o ${rotaLabel} com ID ${id}.`, type: "error", icon: "../public/assets/icons/error.svg" });
+            await showAlert({ 
+                message: `Nenhuma informação para editar o ${rotaLabel} com ID ${id}.`, 
+                type: "error", 
+                icon: "../public/assets/icons/error.svg" 
+            });
             return;
         }
 
@@ -136,9 +168,11 @@ async function editarItem(idRota, id) {
                 <form id="form-edicao" class="form-modal-edicao">
                     ${formHtmlEdit}
                     <div class="form-actions">
-                        <button type="submit" class="button-send">Salvar Alterações</button>
-                        <button type="button" class="button-modal button-delete" onclick="excluirItem('${idRota}', ${id})">Excluir</button>
-                        <button type="button" class="button-modal button-close" onclick="fecharModal()">Cancelar</button>
+                        <button type="submit" class="button-send" ${isSubmitting ? 'disabled' : ''}>
+                            ${isSubmitting ? 'Salvando...' : 'Salvar Alterações'}
+                        </button>
+                        <button type="button" class="button-modal button-delete" onclick="excluirItem('${idRota}', ${id})" ${isSubmitting ? 'disabled' : ''}>Excluir</button>
+                        <button type="button" class="button-modal button-close" onclick="fecharModal()" ${isSubmitting ? 'disabled' : ''}>Cancelar</button>
                     </div>
                 </form>`;
         }
@@ -150,49 +184,103 @@ async function editarItem(idRota, id) {
         if (formEdicao) {
             formEdicao.onsubmit = async function (e) {
                 e.preventDefault();
-                const dadosAtualizados = {};
-                formEdicao.querySelectorAll(".input-edicao:not([readonly]), textarea.input-edicao:not([readonly])").forEach(input => {
-                    if (input.type === 'number') {
-                        dadosAtualizados[input.name] = input.value === '' ? null : parseFloat(input.value);
-                    } else if (input.type === 'date' && input.value === '') {
-                        dadosAtualizados[input.name] = null; 
-                    }
-                    else { // text, textarea, etc.
-                        dadosAtualizados[input.name] = input.value.trim() === "" ? null : input.value.trim();
-                    }
-                });
-
-                if (Object.keys(dadosAtualizados).length === 0) {
-                    await showAlert({ message: `Nenhuma alteração detectada para ${rotaLabel}.`, type: "info" });
+                
+                if (isSubmitting) {
+                    console.log('Formulário já está sendo enviado, ignorando...');
                     return;
                 }
 
+                isSubmitting = true;
+                
+                // Atualizar UI para mostrar estado de loading
+                const submitBtn = formEdicao.querySelector('button[type="submit"]');
+                const deleteBtn = formEdicao.querySelector('.button-delete');
+                const cancelBtn = formEdicao.querySelector('.button-close');
+                
+                if (submitBtn) {
+                    submitBtn.disabled = true;
+                    submitBtn.textContent = 'Salvando...';
+                }
+                if (deleteBtn) deleteBtn.disabled = true;
+                if (cancelBtn) cancelBtn.disabled = true;
+
                 try {
-                    if (rotaLabel === 'Cliente') await editarClientePorId(dadosAtualizados, id);
-                    else if (rotaLabel === 'Pedido') await editarPedidoPorId(dadosAtualizados, id);
-                    else if (rotaLabel === 'Serviço') await editarServicoPorId(dadosAtualizados, id);
+                    const dadosAtualizados = {};
+                    formEdicao.querySelectorAll(".input-edicao:not([readonly]), textarea.input-edicao:not([readonly])").forEach(input => {
+                        if (input.type === 'number') {
+                            dadosAtualizados[input.name] = input.value === '' ? null : parseFloat(input.value);
+                        } else if (input.type === 'date' && input.value === '') {
+                            dadosAtualizados[input.name] = null; 
+                        } else {
+                            dadosAtualizados[input.name] = input.value.trim() === "" ? null : input.value.trim();
+                        }
+                    });
+
+                    if (Object.keys(dadosAtualizados).length === 0) {
+                        await showAlert({ 
+                            message: `Nenhuma alteração detectada para ${rotaLabel}.`, 
+                            type: "info" 
+                        });
+                        return;
+                    }
+
+                    let response;
+                    if (rotaLabel === 'Cliente') response = await editarClientePorId(dadosAtualizados, id);
+                    else if (rotaLabel === 'Pedido') response = await editarPedidoPorId(dadosAtualizados, id);
+                    else if (rotaLabel === 'Serviço') response = await editarServicoPorId(dadosAtualizados, id);
 
                     fecharModal();
-                    await showAlert({ message: `${rotaLabel} editado com sucesso!`, type: "success", icon: "../public/assets/icons/success.svg" });
-                    if (typeof recarregarLista === 'function') { 
-                        recarregarLista(rotaLabel.toLowerCase() + 's'); // ex: recarregarLista('clientes')
-                    }
+                    await showAlert({ 
+                        message: `${rotaLabel} editado com sucesso!`, 
+                        type: "success", 
+                        icon: "../public/assets/icons/success.svg" 
+                    });
+                    
+                    // Recarregar a lista após sucesso
+                    recarregarLista();
+                    
                 } catch (err) {
                     console.error(`Erro ao salvar ${rotaLabel} ID ${id}:`, err);
-                    await showAlert({ message: `Erro ao editar ${rotaLabel}! Detalhe: ${err.message}.`, type: "error", icon: "../public/assets/icons/error.svg" });
+                    await showAlert({ 
+                        message: `Erro ao editar ${rotaLabel}! Detalhe: ${err.message}.`, 
+                        type: "error", 
+                        icon: "../public/assets/icons/error.svg" 
+                    });
+                } finally {
+                    isSubmitting = false;
+                    
+                    // Restaurar UI
+                    if (submitBtn) {
+                        submitBtn.disabled = false;
+                        submitBtn.textContent = 'Salvar Alterações';
+                    }
+                    if (deleteBtn) deleteBtn.disabled = false;
+                    if (cancelBtn) cancelBtn.disabled = false;
                 }
             };
         }
     } catch (err) {
         console.error(`Erro ao preparar edição para ${rotaLabel} ID ${id}:`, err);
-        await showAlert({ message: `Erro ao carregar dados para edição do ${rotaLabel}.`, type: "error", icon: "../public/assets/icons/error.svg" });
+        await showAlert({ 
+            message: `Erro ao carregar dados para edição do ${rotaLabel}.`, 
+            type: "error", 
+            icon: "../public/assets/icons/error.svg" 
+        });
+        isSubmitting = false;
     }
 }
 
 async function excluirItem(idRota, id) {
+    if (isSubmitting) {
+        console.log('Operação já em andamento, ignorando...');
+        return;
+    }
+
     const rotaLabel = obterRotaLabel(idRota);
     const confirmar = window.confirm(`Tem certeza que deseja excluir este ${rotaLabel.toLowerCase()}? Esta ação não pode ser desfeita.`);
     if (!confirmar) return;
+
+    isSubmitting = true;
 
     try {
         if (idRota === 'idCliente') await excluirClientePorId(id);
@@ -200,26 +288,42 @@ async function excluirItem(idRota, id) {
         else if (idRota === 'idServico') await excluirServicoPorId(id); 
         else { 
             console.error(`Tentativa de exclusão com rota desconhecida: ${idRota}`);
-            await showAlert({ message: `Tipo de item desconhecido para exclusão.`, type: "error", icon: "../public/assets/icons/error.svg" });
+            await showAlert({ 
+                message: `Tipo de item desconhecido para exclusão.`, 
+                type: "error", 
+                icon: "../public/assets/icons/error.svg" 
+            });
             return;
         }
 
-        await showAlert({ message: `${rotaLabel} excluído com sucesso!`, type: "success", icon: "../public/assets/icons/success.svg" });
+        await showAlert({ 
+            message: `${rotaLabel} excluído com sucesso!`, 
+            type: "success", 
+            icon: "../public/assets/icons/success.svg" 
+        });
+        
         fecharModal(); 
-        if (typeof recarregarLista === 'function') { 
-            recarregarLista(rotaLabel.toLowerCase() + 's');
-        }
+        recarregarLista();
+        
     } catch (err) {
         console.error(`Erro ao excluir ${rotaLabel} ID ${id}:`, err);
-        await showAlert({ message: `Erro ao excluir ${rotaLabel}! Detalhe: ${err.message}`, type: "error", icon: "../public/assets/icons/error.svg" });
+        await showAlert({ 
+            message: `Erro ao excluir ${rotaLabel}! Detalhe: ${err.message}`, 
+            type: "error", 
+            icon: "../public/assets/icons/error.svg" 
+        });
+    } finally {
+        isSubmitting = false;
     }
 }
 
+// Expor funções globalmente
 window.verDetalhes = verDetalhes;
 window.editarItem = editarItem;
 window.excluirItem = excluirItem;
 window.fecharModal = fecharModal;
 
+// Fechar modal ao clicar fora
 window.addEventListener('click', function(event) {
     const modal = document.getElementById("modal-detalhes");
     if (modal && event.target == modal) {

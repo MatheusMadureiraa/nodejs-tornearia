@@ -1,9 +1,12 @@
+import { realizarBackup } from '../scripts/utils/backupUtils.js';
+
 window.onload = () => {
     fetch('../components/sidebar.html')
         .then(response => response.text())
         .then(data => {
             document.getElementById('sidebar-container').innerHTML = data;
 
+            // Configurar botão de sair
             const sairIcon = document.getElementById('sair');
             sairIcon.addEventListener('click', () => {
                 if (window.api?.fecharApp) {
@@ -12,8 +15,12 @@ window.onload = () => {
                     console.warn('API do Electron não disponível.');
                 }
             });
+
+            // Configurar botão de backup
+            const backupBtn = document.getElementById('backup-btn');
+            if (backupBtn) {
+                backupBtn.addEventListener('click', realizarBackup);
+            }
         })
         .catch(error => console.error('Erro ao carregar o sidebar:', error));
 };
-
-

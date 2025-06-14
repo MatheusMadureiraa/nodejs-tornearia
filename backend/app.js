@@ -12,6 +12,7 @@ app.use('/', require('./routes/root'));
 app.use('/servicos', require("./routes/api/servicosRoutes.js"));
 app.use('/clientes', require('./routes/api/clientesRoutes'));
 app.use('/pedidos', require("./routes/api/pedidosRoutes.js"));
+app.use('/backup', require('./routes/api/backupRoutes'));
 
 app.all('*', (req, res) => {
     res.status(404);

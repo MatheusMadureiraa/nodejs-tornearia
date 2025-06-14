@@ -311,37 +311,240 @@ function atualizarGraficoPrincipal() {
     chartPrincipal.update();
 }
 
-// Exportar gráfico para PDF
+// Exportar relatório completo para PDF
 async function exportarPDF() {
     try {
         const { jsPDF } = window.jspdf;
-        const pdf = new jsPDF('landscape');
+        const pdf = new jsPDF('portrait', 'mm', 'a4');
         
-        // Título
+        // Configurações
+        const pageWidth = pdf.internal.pageSize.getWidth();
+        const pageHeight = pdf.internal.pageSize.getHeight();
+        const margin = 20;
+        let currentY = margin;
+        
+        // Função para adicionar nova página se necessário
+        const checkPageBreak = (neededHeight) => {
+            if (currentY + neededHeight > pageHeight - margin) {
+                pdf.addPage();
+                currentY = margin;
+                return true;
+            }
+            return false;
+        };
+        
+        // Cabeçalho
+        pdf.setFontSize(20);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('RELATÓRIO GERENCIAL', pageWidth / 2, currentY, { align: 'center' });
+        currentY += 10;
+        
         pdf.setFontSize(16);
-        pdf.text('Relatório Dashboard - Vallim Tornearia', 20, 20);
+        pdf.setFont('helvetica', 'normal');
+        pdf.text('Vallim Tornearia', pageWidth / 2, currentY, { align: 'center' });
+        currentY += 15;
         
-        // Data atual
+        // Data e hora
         pdf.setFontSize(10);
-        pdf.text(`Gerado em: ${new Date().toLocaleDateString('pt-BR')}`, 20, 30);
+        const agora = new Date();
+        const dataHora = `Gerado em: ${agora.toLocaleDateString('pt-BR')} às ${agora.toLocaleTimeString('pt-BR')}`;
+        pdf.text(dataHora, pageWidth / 2, currentY, { align: 'center' });
+        currentY += 20;
         
-        // Gráfico principal
-        const canvas = document.getElementById('dashboardChart');
-        const imgData = canvas.toDataURL('image/png');
-        pdf.addImage(imgData, 'PNG', 20, 40, 250, 125);
+        // Estatísticas Gerais
+        checkPageBreak(60);
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('ESTATÍSTICAS GERAIS', margin, currentY);
+        currentY += 10;
         
-        // Estatísticas
         const stats = calcularEstatisticas(dadosCompletos);
-        pdf.setFontSize(12);
-        pdf.text('Estatísticas Gerais:', 20, 180);
-        pdf.setFontSize(10);
-        pdf.text(`Total de Clientes: ${stats.totalClientes}`, 20, 190);
-        pdf.text(`Total de Serviços: ${stats.totalServicos}`, 20, 200);
-        pdf.text(`Faturamento Total: R$ ${stats.faturamentoTotal.toFixed(2)}`, 20, 210);
-        pdf.text(`Gastos com Materiais: R$ ${stats.gastosTotal.toFixed(2)}`, 150, 190);
-        pdf.text(`Lucro Estimado: R$ ${stats.lucroEstimado.toFixed(2)}`, 150, 200);
         
-        pdf.save('relatorio-dashboard.pdf');
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        
+        const estatisticas = [
+            ['Total de Clientes:', stats.totalClientes.toString()],
+            ['Total de Serviços:', stats.totalServicos.toString()],
+            ['Total de Pedidos:', stats.totalPedidos.toString()],
+            ['Faturamento Total:', formatarValor(stats.faturamentoTotal)],
+            ['Gastos com Materiais:', formatarValor(stats.gastosTotal)],
+            ['Lucro Estimado:', formatarValor(stats.lucroEstimado)]
+        ];
+        
+        estatisticas.forEach(([label, value]) => {
+            pdf.text(label, margin, currentY);
+            pdf.text(value, margin + 80, currentY);
+            currentY += 7;
+        });
+        
+        currentY += 10;
+        
+        // Status dos Serviços
+        checkPageBreak(40);
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('STATUS DOS SERVIÇOS', margin, currentY);
+        currentY += 10;
+        
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        
+        const statusServicos = [
+            ['Pendentes:', stats.servicosPendentes.toString()],
+            ['Em Andamento:', stats.servicosAndamento.toString()],
+            ['Concluídos:', stats.servicosConcluidos.toString()]
+        ];
+        
+        statusServicos.forEach(([label, value]) => {
+            pdf.text(label, margin, currentY);
+            pdf.text(value, margin + 50, currentY);
+            currentY += 7;
+        });
+        
+        currentY += 10;
+        
+        // Status dos Pagamentos
+        checkPageBreak(40);
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('STATUS DOS PAGAMENTOS', margin, currentY);
+        currentY += 10;
+        
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        
+        const statusPagamentos = [
+            ['Pendentes:', stats.pagamentosPendentes.toString()],
+            ['Parciais:', stats.pagamentosParciais.toString()],
+            ['Pagos:', stats.pagamentosCompletos.toString()]
+        ];
+        
+        statusPagamentos.forEach(([label, value]) => {
+            pdf.text(label, margin, currentY);
+            pdf.text(value, margin + 50, currentY);
+            currentY += 7;
+        });
+        
+        currentY += 15;
+        
+        // Gráfico Principal
+        checkPageBreak(120);
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('ANÁLISE MENSAL - FATURAMENTO', margin, currentY);
+        currentY += 10;
+        
+        try {
+            const canvas = document.getElementById('dashboardChart');
+            const imgData = canvas.toDataURL('image/png', 1.0);
+            pdf.addImage(imgData, 'PNG', margin, currentY, pageWidth - 2 * margin, 100);
+            currentY += 110;
+        } catch (error) {
+            console.warn('Erro ao capturar gráfico principal:', error);
+            pdf.text('Gráfico não disponível', margin, currentY);
+            currentY += 20;
+        }
+        
+        // Top Clientes
+        checkPageBreak(60);
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('TOP 5 CLIENTES POR FATURAMENTO', margin, currentY);
+        currentY += 10;
+        
+        const topClientes = obterTopClientes(dadosCompletos.servicos, dadosCompletos.clientes);
+        
+        pdf.setFontSize(11);
+        pdf.setFont('helvetica', 'normal');
+        
+        topClientes.forEach((cliente, index) => {
+            checkPageBreak(7);
+            pdf.text(`${index + 1}. ${cliente.nome}`, margin, currentY);
+            pdf.text(formatarValor(cliente.faturamento), margin + 100, currentY);
+            currentY += 7;
+        });
+        
+        currentY += 15;
+        
+        // Análise Mensal Detalhada
+        checkPageBreak(80);
+        pdf.setFontSize(14);
+        pdf.setFont('helvetica', 'bold');
+        pdf.text('ANÁLISE MENSAL DETALHADA', margin, currentY);
+        currentY += 10;
+        
+        const faturamentoMensal = processarFaturamentoPorMes(dadosCompletos.servicos);
+        const servicosMensal = processarServicosPorMes(dadosCompletos.servicos);
+        const gastosMensal = processarGastosMateriais(dadosCompletos.pedidos);
+        
+        pdf.setFontSize(10);
+        pdf.setFont('helvetica', 'bold');
+        
+        // Cabeçalho da tabela
+        pdf.text('Mês', margin, currentY);
+        pdf.text('Faturamento', margin + 30, currentY);
+        pdf.text('Serviços', margin + 70, currentY);
+        pdf.text('Gastos', margin + 100, currentY);
+        pdf.text('Lucro', margin + 130, currentY);
+        currentY += 7;
+        
+        pdf.setFont('helvetica', 'normal');
+        
+        labels.forEach((mes, index) => {
+            checkPageBreak(7);
+            const faturamento = faturamentoMensal[index] || 0;
+            const servicos = servicosMensal[index] || 0;
+            const gastos = gastosMensal[index] || 0;
+            const lucro = faturamento - gastos;
+            
+            pdf.text(mes, margin, currentY);
+            pdf.text(`R$ ${faturamento.toFixed(2)}`, margin + 30, currentY);
+            pdf.text(servicos.toString(), margin + 70, currentY);
+            pdf.text(`R$ ${gastos.toFixed(2)}`, margin + 100, currentY);
+            pdf.text(`R$ ${lucro.toFixed(2)}`, margin + 130, currentY);
+            currentY += 6;
+        });
+        
+        // Rodapé
+        const totalPages = pdf.internal.getNumberOfPages();
+        for (let i = 1; i <= totalPages; i++) {
+            pdf.setPage(i);
+            pdf.setFontSize(8);
+            pdf.setFont('helvetica', 'normal');
+            pdf.text(`Página ${i} de ${totalPages}`, pageWidth - margin, pageHeight - 10, { align: 'right' });
+            pdf.text('Vallim Tornearia - Sistema de Gestão', margin, pageHeight - 10);
+        }
+        
+        // Salvar PDF
+        const timestamp = new Date().toISOString().split('T')[0];
+        pdf.save(`relatorio-completo-${timestamp}.pdf`);
+        
+        // Mostrar alerta de sucesso
+        const alertContainer = document.getElementById('alert-container');
+        if (alertContainer) {
+            const alert = document.createElement('div');
+            alert.className = 'alert success';
+            alert.innerHTML = `
+                <img src="../public/assets/icons/success.svg" alt="Sucesso">
+                <span>Relatório PDF exportado com sucesso!</span>
+                <button class="close-btn">×</button>
+            `;
+            alertContainer.appendChild(alert);
+            
+            setTimeout(() => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            }, 5000);
+            
+            alert.querySelector('.close-btn').addEventListener('click', () => {
+                if (alert.parentNode) {
+                    alert.remove();
+                }
+            });
+        }
+        
     } catch (error) {
         console.error('Erro ao exportar PDF:', error);
         alert('Erro ao exportar PDF. Tente novamente.');
