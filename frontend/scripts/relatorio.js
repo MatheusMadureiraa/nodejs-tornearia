@@ -19,6 +19,14 @@ let chartTopClientes = null;
 // Labels dos meses
 const labels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
+const formatarValor = (valor) => {
+  return new Intl.NumberFormat('pt-BR', {
+    style: 'currency',
+    currency: 'BRL',
+    minimumFractionDigits: 2,
+  }).format(valor);
+};
+
 // Configurações dos datasets
 const datasetsConfig = {
     faturamento: {
@@ -81,9 +89,9 @@ function exibirEstatisticas() {
     document.getElementById('total-clientes').textContent = stats.totalClientes;
     document.getElementById('total-servicos').textContent = stats.totalServicos;
     document.getElementById('total-pedidos').textContent = stats.totalPedidos;
-    document.getElementById('faturamento-total').textContent = `R$ ${stats.faturamentoTotal.toFixed(2)}`;
-    document.getElementById('gastos-total').textContent = `R$ ${stats.gastosTotal.toFixed(2)}`;
-    document.getElementById('lucro-estimado').textContent = `R$ ${stats.lucroEstimado.toFixed(2)}`;
+    document.getElementById('faturamento-total').textContent = formatarValor(stats.faturamentoTotal);
+    document.getElementById('gastos-total').textContent = formatarValor(stats.gastosTotal);
+    document.getElementById('lucro-estimado').textContent = formatarValor(stats.lucroEstimado);
     
     // Atualizar indicadores de status
     document.getElementById('servicos-pendentes').textContent = stats.servicosPendentes;
