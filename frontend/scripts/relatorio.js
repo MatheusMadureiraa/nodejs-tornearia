@@ -6,7 +6,10 @@ import {
     processarGastosMateriais,
     processarServicosPorMes,
     processarStatusPagamentos,
-    processarStatusServicos
+    processarStatusServicos,
+    obterServicosPagamentosPendentes,
+    obterServicosPendentesAndamento,
+    obterAnosDisponiveis
 } from './utils/dashboardUtils.js';
 
 // Variáveis globais
@@ -15,6 +18,8 @@ let chartPrincipal = null;
 let chartStatus = null;
 let chartPagamentos = null;
 let chartTopClientes = null;
+let anoSelecionado = new Date().getFullYear();
+let periodoStatusSelecionado = 30;
 
 // Labels dos meses
 const labels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
@@ -52,6 +57,37 @@ const datasetsConfig = {
     }
 };
 
+// Inicializar filtros
+function inicializarFiltros() {
+    // Configurar filtro de ano
+    const anosDisponiveis = obterAnosDisponiveis(dadosCompletos.servicos, dadosCompletos.pedidos);
+    const yearFilter = document.getElementById('yearFilter');
+    
+    yearFilter.innerHTML = '';
+    anosDisponiveis.forEach(ano => {
+        const option = document.createElement('option');
+        option.value = ano;
+        option.textContent = ano;
+        if (ano === anoSelecionado) {
+            option.selected = true;
+        }
+        yearFilter.appendChild(option);
+    });
+    
+    // Event listener para filtro de ano
+    yearFilter.addEventListener('change', (e) => {
+        anoSelecionado = parseInt(e.target.value);
+        atualizarDashboard();
+    });
+    
+    // Event listener para filtro de período de status
+    document.getElementById('statusTimeFilter').addEventListener('change', (e) => {
+        periodoStatusSelecionado = e.target.value === 'all' ? 'all' : parseInt(e.target.value);
+        atualizarGraficosStatus();
+        atualizarListasStatus();
+    });
+}
+
 // Inicializar dashboard
 async function inicializarDashboard() {
     try {
@@ -62,14 +98,11 @@ async function inicializarDashboard() {
         dadosCompletos = await buscarDadosCompletos();
         console.log('Dados carregados:', dadosCompletos);
         
-        // Processar e exibir estatísticas
-        exibirEstatisticas();
+        // Inicializar filtros
+        inicializarFiltros();
         
-        // Criar gráficos
-        criarGraficoPrincipal();
-        criarGraficoStatusServicos();
-        criarGraficoStatusPagamentos();
-        criarGraficoTopClientes();
+        // Processar e exibir dados
+        atualizarDashboard();
         
         // Ocultar loading
         mostrarLoading(false);
@@ -81,9 +114,18 @@ async function inicializarDashboard() {
     }
 }
 
+// Atualizar todo o dashboard
+function atualizarDashboard() {
+    exibirEstatisticas();
+    criarGraficoPrincipal();
+    atualizarGraficosStatus();
+    criarGraficoTopClientes();
+    atualizarListasStatus();
+}
+
 // Exibir estatísticas gerais
 function exibirEstatisticas() {
-    const stats = calcularEstatisticas(dadosCompletos);
+    const stats = calcularEstatisticas(dadosCompletos, anoSelecionado);
     
     // Atualizar cards de estatísticas
     document.getElementById('total-clientes').textContent = stats.totalClientes;
@@ -107,8 +149,13 @@ function exibirEstatisticas() {
 function criarGraficoPrincipal() {
     const ctx = document.getElementById('dashboardChart').getContext('2d');
     
+    // Destruir gráfico anterior se existir
+    if (chartPrincipal) {
+        chartPrincipal.destroy();
+    }
+    
     // Processar dados iniciais (faturamento)
-    const faturamentoData = processarFaturamentoPorMes(dadosCompletos.servicos);
+    const faturamentoData = processarFaturamentoPorMes(dadosCompletos.servicos, anoSelecionado);
     
     chartPrincipal = new Chart(ctx, {
         type: 'line',
@@ -125,7 +172,7 @@ function criarGraficoPrincipal() {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Análise Mensal - Ano Atual'
+                    text: `Análise Mensal - ${anoSelecionado}`
                 },
                 legend: {
                     display: true,
@@ -173,10 +220,22 @@ function criarGraficoPrincipal() {
     });
 }
 
+// Atualizar gráficos de status
+function atualizarGraficosStatus() {
+    criarGraficoStatusServicos();
+    criarGraficoStatusPagamentos();
+}
+
 // Criar gráfico de status dos serviços
 function criarGraficoStatusServicos() {
     const ctx = document.getElementById('statusServicosChart').getContext('2d');
-    const statusData = processarStatusServicos(dadosCompletos.servicos);
+    
+    // Destruir gráfico anterior se existir
+    if (chartStatus) {
+        chartStatus.destroy();
+    }
+    
+    const statusData = processarStatusServicos(dadosCompletos.servicos, periodoStatusSelecionado);
     
     chartStatus = new Chart(ctx, {
         type: 'doughnut',
@@ -195,7 +254,7 @@ function criarGraficoStatusServicos() {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Status dos Serviços'
+                    text: `Status dos Serviços ${getPeriodoTexto()}`
                 },
                 legend: {
                     position: 'bottom'
@@ -208,7 +267,13 @@ function criarGraficoStatusServicos() {
 // Criar gráfico de status dos pagamentos
 function criarGraficoStatusPagamentos() {
     const ctx = document.getElementById('statusPagamentosChart').getContext('2d');
-    const statusData = processarStatusPagamentos(dadosCompletos.servicos);
+    
+    // Destruir gráfico anterior se existir
+    if (chartPagamentos) {
+        chartPagamentos.destroy();
+    }
+    
+    const statusData = processarStatusPagamentos(dadosCompletos.servicos, periodoStatusSelecionado);
     
     chartPagamentos = new Chart(ctx, {
         type: 'doughnut',
@@ -227,7 +292,7 @@ function criarGraficoStatusPagamentos() {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Status dos Pagamentos'
+                    text: `Status dos Pagamentos ${getPeriodoTexto()}`
                 },
                 legend: {
                     position: 'bottom'
@@ -240,7 +305,13 @@ function criarGraficoStatusPagamentos() {
 // Criar gráfico de top clientes
 function criarGraficoTopClientes() {
     const ctx = document.getElementById('topClientesChart').getContext('2d');
-    const topClientes = obterTopClientes(dadosCompletos.servicos, dadosCompletos.clientes);
+    
+    // Destruir gráfico anterior se existir
+    if (chartTopClientes) {
+        chartTopClientes.destroy();
+    }
+    
+    const topClientes = obterTopClientes(dadosCompletos.servicos, dadosCompletos.clientes, anoSelecionado);
     
     chartTopClientes = new Chart(ctx, {
         type: 'bar',
@@ -260,7 +331,7 @@ function criarGraficoTopClientes() {
             plugins: {
                 title: {
                     display: true,
-                    text: 'Top 5 Clientes por Faturamento'
+                    text: `Top 5 Clientes por Faturamento - ${anoSelecionado}`
                 },
                 legend: {
                     display: false
@@ -280,6 +351,72 @@ function criarGraficoTopClientes() {
     });
 }
 
+// Atualizar listas de status
+function atualizarListasStatus() {
+    atualizarListaPagamentosPendentes();
+    atualizarListaServicosPendentes();
+}
+
+// Atualizar lista de pagamentos pendentes/parciais
+function atualizarListaPagamentosPendentes() {
+    const container = document.getElementById('pagamentos-pendentes-lista');
+    const servicos = obterServicosPagamentosPendentes(dadosCompletos.servicos, dadosCompletos.clientes);
+    
+    if (servicos.length === 0) {
+        container.innerHTML = '<div class="empty-list">Nenhum pagamento pendente encontrado</div>';
+        return;
+    }
+    
+    container.innerHTML = servicos.map(servico => `
+        <div class="status-item">
+            <div class="status-item-header">
+                <span class="status-item-title">${servico.nomeServico}</span>
+                <span class="status-item-value">${formatarValor(servico.preco)}</span>
+            </div>
+            <div class="status-item-details">
+                <span>Cliente: ${servico.nomeCliente}</span>
+                <span>Data: ${new Date(servico.data + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                <span class="status-badge ${servico.statusPagamento === -1 ? 'pendente' : 'parcial'}">
+                    ${servico.statusPagamento === -1 ? 'Pendente' : 'Parcial'}
+                </span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Atualizar lista de serviços pendentes/em andamento
+function atualizarListaServicosPendentes() {
+    const container = document.getElementById('servicos-pendentes-lista');
+    const servicos = obterServicosPendentesAndamento(dadosCompletos.servicos, dadosCompletos.clientes);
+    
+    if (servicos.length === 0) {
+        container.innerHTML = '<div class="empty-list">Nenhum serviço pendente encontrado</div>';
+        return;
+    }
+    
+    container.innerHTML = servicos.map(servico => `
+        <div class="status-item">
+            <div class="status-item-header">
+                <span class="status-item-title">${servico.nomeServico}</span>
+                <span class="status-item-value">${formatarValor(servico.preco)}</span>
+            </div>
+            <div class="status-item-details">
+                <span>Cliente: ${servico.nomeCliente}</span>
+                <span>Data: ${new Date(servico.data + 'T00:00:00').toLocaleDateString('pt-BR')}</span>
+                <span class="status-badge ${servico.statusServico === -1 ? 'pendente' : 'andamento'}">
+                    ${servico.statusServico === -1 ? 'Pendente' : 'Em Andamento'}
+                </span>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Obter texto do período selecionado
+function getPeriodoTexto() {
+    if (periodoStatusSelecionado === 'all') return '';
+    return `(Últimos ${periodoStatusSelecionado} dias)`;
+}
+
 // Atualizar gráfico principal baseado na seleção
 function atualizarGraficoPrincipal() {
     const tipo = document.getElementById('chartType').value;
@@ -287,15 +424,15 @@ function atualizarGraficoPrincipal() {
     
     switch (tipo) {
         case 'faturamento':
-            novosDados = processarFaturamentoPorMes(dadosCompletos.servicos);
+            novosDados = processarFaturamentoPorMes(dadosCompletos.servicos, anoSelecionado);
             novaConfig = datasetsConfig.faturamento;
             break;
         case 'servicos':
-            novosDados = processarServicosPorMes(dadosCompletos.servicos);
+            novosDados = processarServicosPorMes(dadosCompletos.servicos, anoSelecionado);
             novaConfig = datasetsConfig.servicos;
             break;
         case 'materiais':
-            novosDados = processarGastosMateriais(dadosCompletos.pedidos);
+            novosDados = processarGastosMateriais(dadosCompletos.pedidos, anoSelecionado);
             novaConfig = datasetsConfig.materiais;
             break;
         default:
@@ -307,6 +444,9 @@ function atualizarGraficoPrincipal() {
         ...novaConfig,
         data: novosDados
     };
+    
+    // Atualizar título
+    chartPrincipal.options.plugins.title.text = `Análise Mensal - ${anoSelecionado}`;
     
     chartPrincipal.update();
 }
@@ -342,6 +482,10 @@ async function exportarPDF() {
         pdf.setFontSize(16);
         pdf.setFont('helvetica', 'normal');
         pdf.text('Vallim Tornearia', pageWidth / 2, currentY, { align: 'center' });
+        currentY += 10;
+        
+        pdf.setFontSize(14);
+        pdf.text(`Ano: ${anoSelecionado}`, pageWidth / 2, currentY, { align: 'center' });
         currentY += 15;
         
         // Data e hora
@@ -358,7 +502,7 @@ async function exportarPDF() {
         pdf.text('ESTATÍSTICAS GERAIS', margin, currentY);
         currentY += 10;
         
-        const stats = calcularEstatisticas(dadosCompletos);
+        const stats = calcularEstatisticas(dadosCompletos, anoSelecionado);
         
         pdf.setFontSize(11);
         pdf.setFont('helvetica', 'normal');
@@ -432,7 +576,7 @@ async function exportarPDF() {
         checkPageBreak(120);
         pdf.setFontSize(14);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('ANÁLISE MENSAL - FATURAMENTO', margin, currentY);
+        pdf.text(`ANÁLISE MENSAL - FATURAMENTO ${anoSelecionado}`, margin, currentY);
         currentY += 10;
         
         try {
@@ -450,10 +594,10 @@ async function exportarPDF() {
         checkPageBreak(60);
         pdf.setFontSize(14);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('TOP 5 CLIENTES POR FATURAMENTO', margin, currentY);
+        pdf.text(`TOP 5 CLIENTES POR FATURAMENTO - ${anoSelecionado}`, margin, currentY);
         currentY += 10;
         
-        const topClientes = obterTopClientes(dadosCompletos.servicos, dadosCompletos.clientes);
+        const topClientes = obterTopClientes(dadosCompletos.servicos, dadosCompletos.clientes, anoSelecionado);
         
         pdf.setFontSize(11);
         pdf.setFont('helvetica', 'normal');
@@ -471,12 +615,12 @@ async function exportarPDF() {
         checkPageBreak(80);
         pdf.setFontSize(14);
         pdf.setFont('helvetica', 'bold');
-        pdf.text('ANÁLISE MENSAL DETALHADA', margin, currentY);
+        pdf.text(`ANÁLISE MENSAL DETALHADA - ${anoSelecionado}`, margin, currentY);
         currentY += 10;
         
-        const faturamentoMensal = processarFaturamentoPorMes(dadosCompletos.servicos);
-        const servicosMensal = processarServicosPorMes(dadosCompletos.servicos);
-        const gastosMensal = processarGastosMateriais(dadosCompletos.pedidos);
+        const faturamentoMensal = processarFaturamentoPorMes(dadosCompletos.servicos, anoSelecionado);
+        const servicosMensal = processarServicosPorMes(dadosCompletos.servicos, anoSelecionado);
+        const gastosMensal = processarGastosMateriais(dadosCompletos.pedidos, anoSelecionado);
         
         pdf.setFontSize(10);
         pdf.setFont('helvetica', 'bold');
@@ -518,7 +662,7 @@ async function exportarPDF() {
         
         // Salvar PDF
         const timestamp = new Date().toISOString().split('T')[0];
-        pdf.save(`relatorio-completo-${timestamp}.pdf`);
+        pdf.save(`relatorio-completo-${anoSelecionado}-${timestamp}.pdf`);
         
         // Mostrar alerta de sucesso
         const alertContainer = document.getElementById('alert-container');
