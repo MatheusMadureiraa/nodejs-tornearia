@@ -1,12 +1,12 @@
 import { buscarDadosCompletos } from './api/dashboardApi.js';
 import {
-    processarFaturamentoPorMes,
-    processarServicosPorMes,
-    processarGastosMateriais,
     calcularEstatisticas,
-    processarStatusServicos,
+    obterTopClientes,
+    processarFaturamentoPorMes,
+    processarGastosMateriais,
+    processarServicosPorMes,
     processarStatusPagamentos,
-    obterTopClientes
+    processarStatusServicos
 } from './utils/dashboardUtils.js';
 
 // Variáveis globais
@@ -20,11 +20,11 @@ let chartTopClientes = null;
 const labels = ['Jan', 'Fev', 'Mar', 'Abr', 'Mai', 'Jun', 'Jul', 'Ago', 'Set', 'Out', 'Nov', 'Dez'];
 
 const formatarValor = (valor) => {
-  return new Intl.NumberFormat('pt-BR', {
-    style: 'currency',
-    currency: 'BRL',
-    minimumFractionDigits: 2,
-  }).format(valor);
+    return new Intl.NumberFormat('pt-BR', {
+        style: 'currency',
+        currency: 'BRL',
+        minimumFractionDigits: 2,
+    }).format(valor);
 };
 
 // Configurações dos datasets
