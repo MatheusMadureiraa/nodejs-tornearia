@@ -17,72 +17,44 @@ body {
 h1 {
     font-size: max(18px, 1.8vw);
     color: #333;
-    margin-bottom: 30px;
 }
 
-/* Filtro de Ano */
-.year-filter-container {
+/* Filtro de Ano e Status*/
+.year-filter-container, .status-filter-container {
     width: 100%;
     display: flex;
+    flex-direction: column;
+    align-items: center;
     justify-content: center;
     margin-bottom: 20px;
-}
-
-.year-filter-container .filter-box {
-    background: white;
-    padding: 15px 20px;
-    border-radius: 8px;
+    padding: 10px 5px;
+    background-color: transparent;
+    border-radius: 5px;
     box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    background-color: white;
 }
 
-.year-filter-container .filter-box label {
+.year-filter-container select, .status-filter-container select {
+    width: 33%;
+    margin-top:3px;
+    padding: 8px 12px;
+    border: 1px #018c18 solid;
+    text-align: center;
+    background-color: white;
+    border-radius: 5px;
+    font-size: 14px;
+    cursor: pointer;
+    min-width: 120px;
+
+}
+
+.year-filter-container label, .status-filter-container label {
     font-weight: 600;
     font-size: 14px;
     color: #333;
     margin-right: 10px;
 }
 
-.year-filter-container .filter-box select {
-    padding: 8px 12px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    background-color: white;
-    font-size: 14px;
-    cursor: pointer;
-    min-width: 120px;
-}
-
-/* Filtro de Status */
-.status-filter-container {
-    width: 100%;
-    display: flex;
-    justify-content: center;
-    margin-bottom: 20px;
-}
-
-.status-filter-container .filter-box {
-    background: white;
-    padding: 10px 15px;
-    border-radius: 6px;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.08);
-}
-
-.status-filter-container .filter-box label {
-    font-weight: 500;
-    font-size: 13px;
-    color: #333;
-    margin-right: 8px;
-}
-
-.status-filter-container .filter-box select {
-    padding: 6px 10px;
-    border: 1px solid #ccc;
-    border-radius: 4px;
-    background-color: white;
-    font-size: 13px;
-    cursor: pointer;
-    min-width: 150px;
-}
 
 .dashboard-controls {
     width: 100%;
@@ -95,7 +67,7 @@ h1 {
 
 .filter-box {
     display: flex;
-    align-items: center;
+    align-items: start;
     gap: 10px;
 }
 
@@ -156,9 +128,9 @@ h1 {
 .stats-grid {
     width: 100%;
     display: grid;
+    margin-bottom: 20px;
     grid-template-columns: repeat(auto-fit, minmax(200px, 0.5fr));
     gap: 20px;
-    margin-bottom: 50px;
 }
 
 .stat-card {
@@ -232,6 +204,7 @@ h2 {
     font-size: max(18px, 1.4vw);
     color: #333;
     text-align: left;
+    margin-top:50px;
 }
 
 .charts-grid {
@@ -261,11 +234,19 @@ h2 {
     border-top: 1px solid #e9ecef;
 }
 
+.ano-status{
+    font-size: 14px;
+    font-style: italic;
+    color:#666;
+    border-bottom: 1px #018c18 solid;
+    padding-bottom: 4px;
+}
+
 .stat-item {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding: 5px 0;
+    padding-bottom: 5px;
 }
 
 .stat-label {
@@ -274,32 +255,31 @@ h2 {
 }
 
 .stat-value {
+    font-size: 13px;
     font-weight: bold;
-    color: #333;
+    color: #666;
 }
 
-/* Listas de Status */
-.status-lists-container {
-    width: 100%;
-    margin-top: 30px;
-}
 
 .status-lists-grid {
+    width: 100%;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: 20px;
-    margin-top: 20px;
 }
 
 .status-list-card {
+    position: relative;
     background: white;
+    padding: 20px;
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0,0,0,0.1);
-    padding: 20px;
+    margin-bottom: 20px;
 }
 
 .status-list-card h3 {
-    margin: 0 0 15px 0;
+    text-align: center;
+    margin: 0 25px 15px 25px;
     font-size: 16px;
     color: #333;
     font-weight: 600;
@@ -397,12 +377,13 @@ h2 {
 
 .stat-card,
 .chart-container,
+.status-lists-grid,
 .status-list-card {
     animation: fadeIn 0.5s ease-out;
 }
 
 /* Melhorias visuais */
-.chart-container::before {
+.chart-container::before, .status-list-card::before{
     content: '';
     position: absolute;
     top: 0;

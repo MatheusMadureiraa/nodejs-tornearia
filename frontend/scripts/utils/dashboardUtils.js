@@ -280,15 +280,6 @@ function obterAnosDisponiveis(servicos, pedidos) {
 }
 
 export {
-    processarFaturamentoPorMes,
-    processarServicosPorMes,
-    processarGastosMateriais,
-    calcularEstatisticas,
-    processarStatusServicos,
-    processarStatusPagamentos,
-    obterTopClientes,
-    obterServicosPagamentosPendentes,
-    obterServicosPendentesAndamento,
-    obterAnosDisponiveis,
-    filtrarServicosPorPeriodo
+    calcularEstatisticas, filtrarServicosPorPeriodo, obterAnosDisponiveis, obterServicosPagamentosPendentes,
+    obterServicosPendentesAndamento, obterTopClientes, processarFaturamentoPorMes, processarGastosMateriais, processarServicosPorMes, processarStatusPagamentos, processarStatusServicos
 };

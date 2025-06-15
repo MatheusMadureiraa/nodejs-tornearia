@@ -23,12 +23,10 @@
 
         <!-- Filtro de Ano -->
         <div class="year-filter-container">
-            <div class="filter-box">
                 <label for="yearFilter">Filtrar por ano:</label>
                 <select id="yearFilter">
                     <!-- Anos serão adicionados dinamicamente -->
                 </select>
-            </div>
         </div>
 
         <!-- Controles do Gráfico Principal -->
@@ -38,7 +36,7 @@
                 <select id="chartType">
                     <option value="faturamento">Faturamento Mensal</option>
                     <option value="servicos">Número de Serviços</option>
-                    <option value="materiais">Gastos com Materiais</option>
+                    <option value="materiais">Gastos</option>
                 </select>
             </div>
             <div class="dashboard-actions">
@@ -67,7 +65,7 @@
             </div>
             <div class="stat-card">
                 <div class="stat-content">
-                    <h3>Total de Pedidos</h3>
+                    <h3>Total de Gastos</h3>
                     <p id="total-pedidos">0</p>
                 </div>
             </div>
@@ -79,7 +77,7 @@
             </div>
             <div class="stat-card warning">
                 <div class="stat-content">
-                    <h3>Gastos com Materiais</h3>
+                    <h3>Gastos</h3>
                     <p id="gastos-total">R$ 0,00</p>
                 </div>
             </div>
@@ -96,14 +94,12 @@
         
         <!-- Filtro de Período para Status -->
         <div class="status-filter-container">
-            <div class="filter-box">
-                <label for="statusTimeFilter">Período para análise de status:</label>
-                <select id="statusTimeFilter">
-                    <option value="30">Últimos 30 dias</option>
-                    <option value="60">Últimos 60 dias</option>
-                    <option value="all">Todos os períodos</option>
-                </select>
-            </div>
+            <label for="statusTimeFilter">Período para análise de status:</label>
+            <select id="statusTimeFilter">
+                <option value="30">Últimos 30 dias</option>
+                <option value="60">Últimos 60 dias</option>
+                <option value="all">Todos os anos</option>
+            </select>
         </div>
 
         <div class="charts-grid">
@@ -111,6 +107,7 @@
             <div class="chart-container">
                 <canvas id="statusServicosChart"></canvas>
                 <div class="chart-stats">
+                    <p id="ano-status-servico" class="ano-status">Serviços Ano X:</p>
                     <div class="stat-item">
                         <span class="stat-label">Pendentes:</span>
                         <span id="servicos-pendentes" class="stat-value">0</span>
@@ -130,6 +127,7 @@
             <div class="chart-container">
                 <canvas id="statusPagamentosChart"></canvas>
                 <div class="chart-stats">
+                    <p id="ano-status-pagamento" class="ano-status">Pagamentos Ano X:</p>
                     <div class="stat-item">
                         <span class="stat-label">Não pagou:</span>
                         <span id="pagamentos-pendentes" class="stat-value">0</span>
@@ -152,24 +150,22 @@
         </div>
 
         <!-- Listas de Status de Serviços -->
-        <div class="status-lists-container">
-            <h2>Status dos Serviços</h2>
+        <h2>Pendentes - Últimos 90 dias</h2>
             
-            <div class="status-lists-grid">
-                <!-- Lista de Pagamentos Pendentes/Parciais -->
-                <div class="status-list-card">
-                    <h3>Pagamentos Pendentes/Parciais</h3>
-                    <div id="pagamentos-pendentes-lista" class="status-list">
-                        <!-- Lista será preenchida dinamicamente -->
-                    </div>
+        <div class="status-lists-grid">
+            <!-- Lista de Pagamentos Pendentes/Parciais -->
+            <div class="status-list-card">
+                <h3>Pagamentos Pendentes</h3>
+                <div id="pagamentos-pendentes-lista" class="status-list">
+                    <!-- Lista será preenchida dinamicamente -->
                 </div>
+            </div>
 
-                <!-- Lista de Serviços Pendentes/Em Andamento -->
-                <div class="status-list-card">
-                    <h3>Serviços Pendentes/Em Andamento</h3>
-                    <div id="servicos-pendentes-lista" class="status-list">
-                        <!-- Lista será preenchida dinamicamente -->
-                    </div>
+            <!-- Lista de Serviços Pendentes/Em Andamento -->
+            <div class="status-list-card">
+                <h3>Serviços Pendentes</h3>
+                <div id="servicos-pendentes-lista" class="status-list">
+                    <!-- Lista será preenchida dinamicamente -->
                 </div>
             </div>
         </div>

@@ -1,15 +1,15 @@
 import { buscarDadosCompletos } from './api/dashboardApi.js';
 import {
     calcularEstatisticas,
+    obterAnosDisponiveis,
+    obterServicosPagamentosPendentes,
+    obterServicosPendentesAndamento,
     obterTopClientes,
     processarFaturamentoPorMes,
     processarGastosMateriais,
     processarServicosPorMes,
     processarStatusPagamentos,
-    processarStatusServicos,
-    obterServicosPagamentosPendentes,
-    obterServicosPendentesAndamento,
-    obterAnosDisponiveis
+    processarStatusServicos
 } from './utils/dashboardUtils.js';
 
 // Variáveis globais
@@ -49,7 +49,7 @@ const datasetsConfig = {
         fill: false
     },
     materiais: {
-        label: 'Gastos com Materiais (R$)',
+        label: 'Gastos (R$)',
         backgroundColor: '#FF9800',
         borderColor: '#FF9800',
         borderWidth: 2,
@@ -125,6 +125,10 @@ function atualizarDashboard() {
 
 // Exibir estatísticas gerais
 function exibirEstatisticas() {
+    document.getElementById('ano-status-servico').textContent = `Todos os Serviços do ano ${anoSelecionado}:`;
+    document.getElementById('ano-status-pagamento').textContent = `Todos os Pagamentos do ano ${anoSelecionado}:`;
+
+
     const stats = calcularEstatisticas(dadosCompletos, anoSelecionado);
     
     // Atualizar cards de estatísticas
@@ -172,7 +176,12 @@ function criarGraficoPrincipal() {
             plugins: {
                 title: {
                     display: true,
-                    text: `Análise Mensal - ${anoSelecionado}`
+                    text: `Análise Mensal - ${anoSelecionado}`,
+                    font: {
+                        size: 15,
+                        weight: 'bold'
+                    },
+                    color: '#666'
                 },
                 legend: {
                     display: true,
@@ -254,7 +263,12 @@ function criarGraficoStatusServicos() {
             plugins: {
                 title: {
                     display: true,
-                    text: `Status dos Serviços ${getPeriodoTexto()}`
+                    text: `Status dos Serviços ${getPeriodoTexto()}`,
+                    font: {
+                        size: 15,
+                        weight: 'bold'
+                    },
+                    color: '#666'
                 },
                 legend: {
                     position: 'bottom'
@@ -292,7 +306,12 @@ function criarGraficoStatusPagamentos() {
             plugins: {
                 title: {
                     display: true,
-                    text: `Status dos Pagamentos ${getPeriodoTexto()}`
+                    text: `Status dos Pagamentos ${getPeriodoTexto()}`,
+                    font: {
+                        size: 15,
+                        weight: 'bold'
+                    },
+                    color: '#666'
                 },
                 legend: {
                     position: 'bottom'
@@ -331,7 +350,12 @@ function criarGraficoTopClientes() {
             plugins: {
                 title: {
                     display: true,
-                    text: `Top 5 Clientes por Faturamento - ${anoSelecionado}`
+                    text: `Top 5 Clientes por Faturamento - ${anoSelecionado}`,
+                    font: {
+                        size: 15,
+                        weight: 'bold'
+                    },
+                    color: '#666'
                 },
                 legend: {
                     display: false
@@ -360,8 +384,10 @@ function atualizarListasStatus() {
 // Atualizar lista de pagamentos pendentes/parciais
 function atualizarListaPagamentosPendentes() {
     const container = document.getElementById('pagamentos-pendentes-lista');
-    const servicos = obterServicosPagamentosPendentes(dadosCompletos.servicos, dadosCompletos.clientes);
-    
+    let servicos = obterServicosPagamentosPendentes(dadosCompletos.servicos, dadosCompletos.clientes);
+    servicos = servicos.filter(servico => estaNosUltimos90Dias(servico.data));
+
+
     if (servicos.length === 0) {
         container.innerHTML = '<div class="empty-list">Nenhum pagamento pendente encontrado</div>';
         return;
@@ -387,8 +413,10 @@ function atualizarListaPagamentosPendentes() {
 // Atualizar lista de serviços pendentes/em andamento
 function atualizarListaServicosPendentes() {
     const container = document.getElementById('servicos-pendentes-lista');
-    const servicos = obterServicosPendentesAndamento(dadosCompletos.servicos, dadosCompletos.clientes);
-    
+    let servicos = obterServicosPendentesAndamento(dadosCompletos.servicos, dadosCompletos.clientes);
+    servicos = servicos.filter(servico => estaNosUltimos90Dias(servico.data));
+
+
     if (servicos.length === 0) {
         container.innerHTML = '<div class="empty-list">Nenhum serviço pendente encontrado</div>';
         return;
@@ -409,6 +437,16 @@ function atualizarListaServicosPendentes() {
             </div>
         </div>
     `).join('');
+}
+
+// verifica se o servico ou pagamento esta nos ultimos 90 dias
+function estaNosUltimos90Dias(dataString) {
+    const hoje = new Date();
+    const dataLimite = new Date();
+    dataLimite.setDate(hoje.getDate() - 90);
+
+    const dataServico = new Date(dataString + 'T00:00:00'); // forçando formato ISO
+    return dataServico >= dataLimite;
 }
 
 // Obter texto do período selecionado
@@ -508,11 +546,11 @@ async function exportarPDF() {
         pdf.setFont('helvetica', 'normal');
         
         const estatisticas = [
-            ['Total de Clientes:', stats.totalClientes.toString()],
-            ['Total de Serviços:', stats.totalServicos.toString()],
-            ['Total de Pedidos:', stats.totalPedidos.toString()],
+            ['Número Total de Clientes:', stats.totalClientes.toString()],
+            ['Número Total de Serviços:', stats.totalServicos.toString()],
+            ['Número Total de Gastos:', stats.totalPedidos.toString()],
             ['Faturamento Total:', formatarValor(stats.faturamentoTotal)],
-            ['Gastos com Materiais:', formatarValor(stats.gastosTotal)],
+            ['Gastos:', formatarValor(stats.gastosTotal)],
             ['Lucro Estimado:', formatarValor(stats.lucroEstimado)]
         ];
         
