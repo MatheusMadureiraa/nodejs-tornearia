@@ -2,7 +2,7 @@
     position: fixed;
     top: 20px;
     right: 20px;
-    z-index: 9999;
+    z-index: 10000; /* Increased z-index to appear above modals */
 }
 
 .alert {

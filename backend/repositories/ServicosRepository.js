@@ -35,6 +35,10 @@ const findById = (id) => {
     return consulta(sql, id, "Serviço que você buscou não foi encontrado! Verifique se ele existe na lista de serviços cadastrados");
 }
 
+const findByClientId = (clientId) => {
+    const sql = "SELECT * FROM servicos WHERE idCliente=?";
+    return consulta(sql, clientId, "Erro ao buscar serviços do cliente");
+}
 
 const patch = (id, camposAtualizar) => {
     if (!camposAtualizar || typeof camposAtualizar !== 'object' || Object.keys(camposAtualizar).length === 0) {
@@ -61,7 +65,7 @@ const deleteById = (id) => {
 }
 
 const ServicosRepository = {
-    create, findAll, findById, patch, deleteById
+    create, findAll, findById, findByClientId, patch, deleteById
 }
 
 module.exports = ServicosRepository;

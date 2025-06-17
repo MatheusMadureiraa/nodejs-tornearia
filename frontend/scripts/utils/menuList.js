@@ -2,6 +2,7 @@ import { editarClientePorId, excluirClientePorId, listarClientePorId } from '../
 import { editarPedidoPorId, excluirPedidoPorId, listarPedidoPorId } from '../api/pedidosApi.js';
 import { editarServicoPorId, excluirServicoPorId, listarServicoPorId } from '../api/servicosApi.js';
 import { showAlert } from './alerts.js';
+import { imageManager } from './imageUtils.js';
 
 // Variável para controlar o estado de submissão
 let isSubmitting = false;
@@ -64,9 +65,17 @@ async function verDetalhes(idRota, id) {
 
         const detalhesHtml = Object.entries(info)
             .map(([chave, valor]) => {
-                const valorFormatado = valor === null || valor === undefined ? 
-                    "<em>Não cadastrado(a)</em>" : 
-                    (typeof valor === 'object' ? JSON.stringify(valor, null, 2) : valor);
+                let valorFormatado;
+                
+                if (chave === 'imagem' && valor) {
+                    // Special handling for image field
+                    valorFormatado = `<div id="image-display-${id}"></div>`;
+                } else {
+                    valorFormatado = valor === null || valor === undefined ? 
+                        "<em>Não cadastrado(a)</em>" : 
+                        (typeof valor === 'object' ? JSON.stringify(valor, null, 2) : valor);
+                }
+                
                 return `<li class="li-modal"><strong>${formatarTexto(chave)}:</strong> ${valorFormatado}</li>`;
             })
             .join("");
@@ -81,6 +90,14 @@ async function verDetalhes(idRota, id) {
                     <button class="button-modal button-delete" onclick="excluirItem('${idRota}', ${id})">Excluir</button>
                     <button type="button" class="button-modal button-close" onclick="fecharModal()">Fechar</button>
                 </div>`;
+                
+            // Display image if it exists
+            if (info.imagem) {
+                const imageContainer = document.getElementById(`image-display-${id}`);
+                if (imageContainer) {
+                    imageManager.displayStoredImage(info.imagem, imageContainer);
+                }
+            }
         }
         const modal = document.getElementById("modal-detalhes");
         if (modal) modal.style.display = "block";
@@ -95,7 +112,7 @@ async function verDetalhes(idRota, id) {
     }
 }
 
-function criarCampoFormulario(chave, valor) {
+function criarCampoFormulario(chave, valor, idRota) {
     const nomeCampo = chave.toLowerCase();
     const labelFormatada = formatarTexto(chave);
     let tipoInput = "text";
@@ -117,15 +134,38 @@ function criarCampoFormulario(chave, valor) {
         valorInput = typeof valorInput === 'string' ? valorInput.split("T")[0] : "";
     } else if (nomeCampo.includes("quantidade")) {
         tipoInput = "number";
-        extraAttrs = `step="1" min="0"`; 
+        extraAttrs = `step="1" min="1"`; 
     } else if (nomeCampo.includes("valor") || nomeCampo.includes("preco") || nomeCampo.includes("total")) {
         tipoInput = "number";
-        extraAttrs = `step="0.01" min="0"`; 
+        extraAttrs = `step="0.01" min="0" required`; 
     } else if (nomeCampo.includes("observacao") || nomeCampo.includes("descricao") || nomeCampo.includes("mensagem")) {
         return `
             <div class="form-group">
                 <label for="${chave}"><strong>${labelFormatada}:</strong></label>
                 <textarea id="${chave}" name="${chave}" class="${inputClass}" rows="3">${valorInput}</textarea>
+            </div>`;
+    } else if (nomeCampo === "pagamento" && idRota === 'idServico') {
+        // Special handling for payment field in services
+        const paymentOptions = ['Boleto', 'Cartão', 'Dinheiro', 'Pix'];
+        const optionsHtml = paymentOptions.map(option => 
+            `<option value="${option}" ${valorInput === option ? 'selected' : ''}>${option}</option>`
+        ).join('');
+        
+        return `
+            <div class="form-group">
+                <label for="${chave}"><strong>${labelFormatada}:</strong></label>
+                <select id="${chave}" name="${chave}" class="${inputClass}">
+                    ${optionsHtml}
+                </select>
+            </div>`;
+    } else if (nomeCampo === "imagem" && idRota === 'idServico') {
+        // Special handling for image field in services
+        return `
+            <div class="form-group">
+                <label for="${chave}"><strong>${labelFormatada}:</strong></label>
+                <input type="file" id="${chave}" name="${chave}" class="${inputClass}" accept="image/*" />
+                <div id="image-preview-edit" style="margin-top: 10px;"></div>
+                ${valorInput ? `<div id="current-image-display" style="margin-top: 10px;"></div>` : ''}
             </div>`;
     }
 
@@ -158,7 +198,7 @@ async function editarItem(idRota, id) {
         }
 
         const formHtmlEdit = Object.entries(informacao)
-            .map(([chave, valor]) => criarCampoFormulario(chave, valor))
+            .map(([chave, valor]) => criarCampoFormulario(chave, valor, idRota))
             .join("");
         
         const detalhesContainer = document.getElementById("detalhes-container");
@@ -175,6 +215,21 @@ async function editarItem(idRota, id) {
                         <button type="button" class="button-modal button-close" onclick="fecharModal()" ${isSubmitting ? 'disabled' : ''}>Cancelar</button>
                     </div>
                 </form>`;
+        }
+        
+        // Setup image handling for services
+        if (idRota === 'idServico') {
+            const imageInput = document.getElementById('imagem');
+            const imagePreview = document.getElementById('image-preview-edit');
+            const currentImageDisplay = document.getElementById('current-image-display');
+            
+            if (imageInput && imagePreview) {
+                imageManager.setupImageInput(imageInput, imagePreview);
+            }
+            
+            if (currentImageDisplay && informacao.imagem) {
+                imageManager.displayStoredImage(informacao.imagem, currentImageDisplay);
+            }
         }
         
         const modal = document.getElementById("modal-detalhes");
@@ -206,11 +261,25 @@ async function editarItem(idRota, id) {
 
                 try {
                     const dadosAtualizados = {};
-                    formEdicao.querySelectorAll(".input-edicao:not([readonly]), textarea.input-edicao:not([readonly])").forEach(input => {
+                    formEdicao.querySelectorAll(".input-edicao:not([readonly]), textarea.input-edicao:not([readonly]), select.input-edicao").forEach(input => {
                         if (input.type === 'number') {
-                            dadosAtualizados[input.name] = input.value === '' ? null : parseFloat(input.value);
+                            if (input.name === 'quantidade') {
+                                dadosAtualizados[input.name] = input.value === '' ? 1 : Math.max(1, parseInt(input.value) || 1);
+                            } else {
+                                dadosAtualizados[input.name] = input.value === '' ? null : parseFloat(input.value);
+                            }
                         } else if (input.type === 'date' && input.value === '') {
                             dadosAtualizados[input.name] = null; 
+                        } else if (input.type === 'file') {
+                            // Handle image file
+                            if (input.files && input.files[0]) {
+                                const file = input.files[0];
+                                const validation = imageManager.validateImageFile(file);
+                                if (!validation.valid) {
+                                    throw new Error(validation.error);
+                                }
+                                dadosAtualizados[input.name] = await imageManager.convertToBase64(file);
+                            }
                         } else {
                             dadosAtualizados[input.name] = input.value.trim() === "" ? null : input.value.trim();
                         }
@@ -226,7 +295,7 @@ async function editarItem(idRota, id) {
 
                     let response;
                     if (rotaLabel === 'Cliente') response = await editarClientePorId(dadosAtualizados, id);
-                    else if (rotaLabel === 'Pedido') response = await editarPedidoPorId(dadosAtualizados, id);
+                    else if (rotaLabel === 'Gasto') response = await editarPedidoPorId(dadosAtualizados, id);
                     else if (rotaLabel === 'Serviço') response = await editarServicoPorId(dadosAtualizados, id);
 
                     fecharModal();

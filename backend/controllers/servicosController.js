@@ -21,15 +21,14 @@ const createNewService = async(req, res) => {
             nomeServico: nomeServico,
             preco,
             idCliente: cliente.idCliente,
-            pagamento: pagamento || 1,
+            pagamento: pagamento || 'Dinheiro',
             data: currentDate,
             statusServico: statusServico || -1,
-            statusPagamento: statusPagamento || 0,
+            statusPagamento: statusPagamento || -1,
             notaFiscal: notaFiscal || null,
             observacao: observacao || null,
             imagem: imagem || null
         };
-
 
         const result = await ServicosRepository.create(servicoData);
         if(!result){
@@ -154,7 +153,31 @@ const patchService = async (req, res) => {
             return res.status(400).json({ message: 'Nenhum campo enviado para atualização' });
         }
 
-        const result = await ServicosRepository.patch(id, camposAtualizar);
+        // Validate and clean data
+        const cleanedFields = {};
+        const validPaymentMethods = ['Boleto', 'Cartão', 'Dinheiro', 'Pix'];
+        
+        Object.keys(camposAtualizar).forEach(key => {
+            const value = camposAtualizar[key];
+            
+            if (key === 'preco') {
+                // Ensure preco is not empty and is a valid number
+                if (value === null || value === undefined || value === '' || isNaN(parseFloat(value))) {
+                    return res.status(400).json({ message: 'Preço é obrigatório e deve ser um número válido' });
+                }
+                cleanedFields[key] = Math.max(0, parseFloat(value));
+            } else if (key === 'pagamento') {
+                // Validate payment method
+                if (value && !validPaymentMethods.includes(value)) {
+                    return res.status(400).json({ message: 'Método de pagamento inválido. Use: Boleto, Cartão, Dinheiro ou Pix' });
+                }
+                cleanedFields[key] = value || 'Dinheiro';
+            } else {
+                cleanedFields[key] = value;
+            }
+        });
+
+        const result = await ServicosRepository.patch(id, cleanedFields);
         if (!result || result.changes === 0) {
             return res.status(400).json({ message: 'Não foi possível atualizar o serviço' });
         }

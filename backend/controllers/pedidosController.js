@@ -2,9 +2,19 @@ const PedidosRepository = require('../repositories/PedidosRepository.js');
 
 const createNewOrder = async(req, res) => {
     const { nomeMaterial, fornecedor, quantidade, valor, entregador, observacao, data } = req.body
-    if(!nomeMaterial || /\d/.test(nomeMaterial)) return res.status(400).json({ message: 'Nome do material é obrigatório para cadastro e não pode ser um número'});
-    else if (quantidade < 1 ) return res.status(400).json({ message: 'Quantidade do material não pode ser negativa'});
-    else if (valor < 0 ) return res.status(400).json({ message: 'Valor do material não pode ser negativo'});
+    
+    // Updated validation - allow alphanumeric names
+    if(!nomeMaterial || nomeMaterial.trim() === '') {
+        return res.status(400).json({ message: 'Nome do material é obrigatório para cadastro'});
+    }
+    
+    if (quantidade && quantidade < 0) {
+        return res.status(400).json({ message: 'Quantidade do material não pode ser negativa'});
+    }
+    
+    if (valor && valor < 0) {
+        return res.status(400).json({ message: 'Valor do material não pode ser negativo'});
+    }
 
     try{
         const currentDate = data || new Date().toISOString().split('T')[0];
@@ -12,7 +22,7 @@ const createNewOrder = async(req, res) => {
         const pedidoData = {
             nomeMaterial: nomeMaterial,
             fornecedor: fornecedor || null,
-            quantidade: quantidade || 0,
+            quantidade: quantidade || 1,
             valor: valor || 0,
             entregador: entregador || null,
             observacao: observacao || null,
@@ -76,7 +86,27 @@ const patchOrder = async(req, res) => {
             return res.status(400).json({ message: 'Nenhum campo enviado para atualização' });
         }
 
-        const result = await PedidosRepository.patch(id, camposAtualizar);
+        // Validate and clean data
+        const cleanedFields = {};
+        
+        Object.keys(camposAtualizar).forEach(key => {
+            const value = camposAtualizar[key];
+            
+            if (key === 'quantidade') {
+                // Ensure quantidade is at least 1 if provided
+                cleanedFields[key] = value === null || value === undefined || value === '' ? 1 : Math.max(1, parseInt(value) || 1);
+            } else if (key === 'valor') {
+                // Ensure valor is not empty and is a valid number
+                if (value === null || value === undefined || value === '' || isNaN(parseFloat(value))) {
+                    return res.status(400).json({ message: 'Valor é obrigatório e deve ser um número válido' });
+                }
+                cleanedFields[key] = Math.max(0, parseFloat(value));
+            } else {
+                cleanedFields[key] = value;
+            }
+        });
+
+        const result = await PedidosRepository.patch(id, cleanedFields);
         if (!result || result.changes === 0) {
             return res.status(400).json({ message: 'Não foi possível atualizar o pedido' });
         }

@@ -1,4 +1,5 @@
 const ClientesRepository = require('../repositories/ClientesRepository.js');
+const ServicosRepository = require('../repositories/ServicosRepository.js');
 
 const createNewClient = async (req, res) => {
     console.log('Entrou no createNewClient');
@@ -66,6 +67,15 @@ const deleteClient = async (req, res) => {
 
     try {
         const id = req.params.idCliente;
+        
+        // Check if client has associated services
+        const associatedServices = await ServicosRepository.findByClientId(id);
+        if (associatedServices && associatedServices.length > 0) {
+            return res.status(400).json({ 
+                message: `Este cliente não pode ser excluído pois possui ${associatedServices.length} serviço(s) vinculado(s).` 
+            });
+        }
+        
         const result = await ClientesRepository.deleteById(id);
 
         if (result.changes > 0) return res.status(200).json({

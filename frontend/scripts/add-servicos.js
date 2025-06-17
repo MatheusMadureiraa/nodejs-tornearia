@@ -1,10 +1,31 @@
 import { criarServico } from "./api/servicosApi.js";
 import { formatarEntradaPreco, formatarNomeArquivo, formatarPreco, setTodayDate } from "./utils/formatacao.js";
 import { showAlert } from "./utils/alerts.js";
+import { AutocompleteComponent, getClientsForAutocomplete } from "./utils/autocomplete.js";
+import { imageManager } from "./utils/imageUtils.js";
 
 // evento de envio do formulário
 document.addEventListener("DOMContentLoaded", () => {
     setTodayDate("data");
+    
+    // Setup autocomplete for client name
+    const clienteInput = document.getElementById("nomeCliente");
+    const clienteAutocomplete = new AutocompleteComponent(
+        clienteInput,
+        getClientsForAutocomplete,
+        (selectedClient) => {
+            console.log('Cliente selecionado:', selectedClient);
+        }
+    );
+
+    // Setup image input
+    const imageInput = document.getElementById("imagem");
+    const imagePreview = document.createElement('div');
+    imagePreview.id = 'image-preview';
+    imageInput.parentNode.appendChild(imagePreview);
+    
+    imageManager.setupImageInput(imageInput, imagePreview);
+    
     const form = document.querySelector(".form-add");
 
     form.addEventListener("submit", async (event) => {
@@ -18,10 +39,7 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = document.getElementById("data").value;
         const notaFiscal = document.getElementById("notaFiscal").value.trim();
         const observacao = document.getElementById("observacao").value.trim();
-
-        // preciso dar um jeito de enviar a imagem
-        //const imagem = document.getElementById("imagem").files[0];
-
+        const imagemFile = document.getElementById("imagem").files[0];
 
         if (!nomeServico || !nomeCliente || !preco) {
             showAlert({
@@ -34,6 +52,29 @@ document.addEventListener("DOMContentLoaded", () => {
 
         const precoFormatado = preco.replace(",", ".");
 
+        let imagemBase64 = null;
+        if (imagemFile) {
+            const validation = imageManager.validateImageFile(imagemFile);
+            if (!validation.valid) {
+                showAlert({
+                    message: validation.error,
+                    type: "error",
+                    icon: "../public/assets/icons/error.svg"
+                });
+                return;
+            }
+            
+            try {
+                imagemBase64 = await imageManager.convertToBase64(imagemFile);
+            } catch (error) {
+                showAlert({
+                    message: "Erro ao processar a imagem.",
+                    type: "error",
+                    icon: "../public/assets/icons/error.svg"
+                });
+                return;
+            }
+        }
         
         const servicoData = {
             nomeServico,
@@ -42,7 +83,8 @@ document.addEventListener("DOMContentLoaded", () => {
             data,
             pagamento,
             notaFiscal,
-            observacao
+            observacao,
+            imagem: imagemBase64
         };
 
         // enviar para a API
@@ -58,6 +100,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
                 form.reset();
                 setTodayDate("data");
+                imagePreview.innerHTML = '';
                 return;
             } else {
                 showAlert({
@@ -69,11 +112,14 @@ document.addEventListener("DOMContentLoaded", () => {
             }
         } catch (error) {
             console.error("Erro ao cadastrar serviço:", error);
-            alert("Erro de conexão com o servidor.");
+            showAlert({
+                message: "Erro de conexão com o servidor.",
+                type: "error",
+                icon: "../public/assets/icons/error.svg"
+            });
         }
     });
 });
-
 
 // formatar entrada do preço
 document.getElementById("preco").addEventListener("input", formatarEntradaPreco);

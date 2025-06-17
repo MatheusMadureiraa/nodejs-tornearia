@@ -1,9 +1,21 @@
 import { criarPedido } from './api/pedidosApi.js';
 import { showAlert } from "./utils/alerts.js";
 import { formatarEntradaPreco, formatarPreco, setTodayDate } from './utils/formatacao.js';
+import { AutocompleteComponent, getSuppliersForAutocomplete } from "./utils/autocomplete.js";
 
 document.addEventListener("DOMContentLoaded", () => {
     setTodayDate("data");
+    
+    // Setup autocomplete for supplier
+    const fornecedorInput = document.getElementById("fornecedor");
+    const fornecedorAutocomplete = new AutocompleteComponent(
+        fornecedorInput,
+        getSuppliersForAutocomplete,
+        (selectedSupplier) => {
+            console.log('Fornecedor selecionado:', selectedSupplier);
+        }
+    );
+    
     const form = document.querySelector('.form-add');
 
     form.addEventListener('submit', async (event) => {
@@ -22,8 +34,8 @@ document.addEventListener("DOMContentLoaded", () => {
         const pedidoData = {
             nomeMaterial,
             fornecedor: fornecedor || "Não informado",
-            quantidade: parseInt(quantidade),
-            valor: parseFloat(valorFormatado),
+            quantidade: parseInt(quantidade) || 1,
+            valor: parseFloat(valorFormatado) || 0,
             data,
             entregador,
             observacao
@@ -39,7 +51,6 @@ document.addEventListener("DOMContentLoaded", () => {
             return;
         }
 
-
         // criação do pedido
         try{
             const result = await criarPedido(pedidoData);
@@ -51,6 +62,8 @@ document.addEventListener("DOMContentLoaded", () => {
                     type: "success",
                     icon: "../public/assets/icons/success.svg"
                 });
+                form.reset();
+                setTodayDate("data");
                 return;
             } else {
                 showAlert({
@@ -79,4 +92,3 @@ document.getElementById("valor").addEventListener("input", formatarEntradaPreco)
 document.querySelector("form").addEventListener("submit", function () {
     formatarPreco(document.getElementById("valor"));
 });
-

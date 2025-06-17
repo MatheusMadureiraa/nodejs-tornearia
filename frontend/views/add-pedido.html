@@ -7,18 +7,19 @@
     <link rel="stylesheet" href="../public/css/form.css">
     <link rel="stylesheet" href="../public/css/styles.css">
     <link rel="stylesheet" href="../public/css/alerts.css">
+    <link rel="stylesheet" href="../public/css/modal.css">
 </head>
 <body>
     <h1>Adicionar Gasto</h1>
     <form class="form-add">
         <label for="nomeMaterial">Nome</label>
-        <input type="text" id="nomeMaterial" placeholder="Digite o que foi comprado (sem número)" required>
+        <input type="text" id="nomeMaterial" placeholder="Digite o que foi comprado" required>
 
         <label for="fornecedor">Fornecedor</label>
-        <input type="text" id="fornecedor" placeholder="Digite de quem comprou o material">
+        <input type="text" id="fornecedor" placeholder="Digite de quem comprou o material" autocomplete="off">
 
         <label for="quantidade">Quantidade</label>
-        <input type="number" id="quantidade" placeholder="Digite a quantidade comprada">
+        <input type="number" id="quantidade" placeholder="Digite a quantidade comprada" min="1" value="1">
 
         <label for="valor">Valor</label>
         <input type="text" step="0.01" id="valor" placeholder="R$ 0.00" required>

@@ -7,6 +7,7 @@
     <link rel="stylesheet" href="../public/css/form.css">
     <link rel="stylesheet" href="../public/css/styles.css">
     <link rel="stylesheet" href="../public/css/alerts.css">
+    <link rel="stylesheet" href="../public/css/modal.css">
 </head>
 <body>
     <h1>Adicionar Serviço</h1>
@@ -15,16 +16,16 @@
             <input type="text" id="nome" placeholder="Digite o serviço que será feito" required>
 
             <label for="nomeCliente">Nome do Cliente</label>
-            <input type="text" id="nomeCliente" placeholder="Digite ou selecione o nome do cliente" required>
+            <input type="text" id="nomeCliente" placeholder="Digite ou selecione o nome do cliente" required autocomplete="off">
 
             <label for="preco">Preço</label>
             <input type="text" step="0.01" id="preco" placeholder="R$ 0.00" required>
 
             <label for="pagamento">Pagamento</label>
             <select id="pagamento">
+                <option value="Dinheiro">Dinheiro</option>
                 <option value="Boleto">Boleto</option>
                 <option value="Cartão">Cartão</option>
-                <option value="Dinheiro">Dinheiro</option>
                 <option value="Pix">Pix</option>
             </select>
 
@@ -41,7 +42,7 @@
                 <label for="imagem" class="custom-file-label">
                     <span id="file-name">Selecionar imagem</span>
                 </label>
-                <input type="file" id="imagem" hidden>
+                <input type="file" id="imagem" accept="image/*" hidden>
             </div>
 
             <button type="submit">Cadastrar Serviço</button>
