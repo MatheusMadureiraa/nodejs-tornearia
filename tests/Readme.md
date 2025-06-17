@@ -53,7 +53,8 @@ Ao adicionar um pedido com nome que contêm número, ele da erro, não sei se é
 o Alerta showAlert não aparece na tela ao editar ou excluir item. Seja o error ou success, nenhum aparece na tela em frente ao modal ou em frente a lista. No forms de adicionar servico ou gasto/pedido ele aparece normalmente. Faça o aparecer, apenas o timeout para reiniciar após o showAlert sumir está funcionando, mas o showAlert não aparece na tela (apenas no console).
 
 6. Excluir cliente com serviço associado
-É possível excluir um cliente que possui seu IdCliente associado a um serivico. O sistema deve exibir um alerta (ex: "Este cliente não pode ser excluído pois possui "N" serviços vinculados.") e impedir a exclusão. Caso não haja serviços, exclui normalmente.
+É possível excluir um cliente que possui seu IdCliente associado a um servico. O sistema deve exibir um alerta (ex: "Este cliente não pode ser excluído pois possui serviços vinculados.") e impedir a exclusão. Caso não haja serviços, exclui normalmente.
+
 
 
 

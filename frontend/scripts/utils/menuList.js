@@ -278,7 +278,7 @@ async function editarItem(idRota, id) {
                                 if (!validation.valid) {
                                     throw new Error(validation.error);
                                 }
-                                dadosAtualizados[input.name] = await imageManager.convertToBase64(file);
+                                dadosAtualizados[input.name] = imageManager.convertToBase64(file);
                             }
                         } else {
                             dadosAtualizados[input.name] = input.value.trim() === "" ? null : input.value.trim();
@@ -311,7 +311,7 @@ async function editarItem(idRota, id) {
                 } catch (err) {
                     console.error(`Erro ao salvar ${rotaLabel} ID ${id}:`, err);
                     await showAlert({ 
-                        message: `Erro ao editar ${rotaLabel}! Detalhe: ${err.message}.`, 
+                        message: `Erro ao editar ${rotaLabel}!`, 
                         type: "error", 
                         icon: "../public/assets/icons/error.svg" 
                     });
@@ -365,20 +365,28 @@ async function excluirItem(idRota, id) {
             return;
         }
 
-        await showAlert({ 
+        await showAlert({
             message: `${rotaLabel} excluído com sucesso!`, 
             type: "success", 
             icon: "../public/assets/icons/success.svg" 
         });
         
-        fecharModal(); 
+        fecharModal();
         recarregarLista();
         
     } catch (err) {
         console.error(`Erro ao excluir ${rotaLabel} ID ${id}:`, err);
-        await showAlert({ 
-            message: `Erro ao excluir ${rotaLabel}! Detalhe: ${err.message}`, 
-            type: "error", 
+        if (idRota === 'idCliente'){
+            await showAlert({
+                message: `Erro ao excluir ${rotaLabel}! Há serviços vinculados a esse cliente`, 
+                type: "error",
+                icon: "../public/assets/icons/error.svg"
+            });
+            return;
+        }
+        await showAlert({
+            message: `Erro ao excluir ${rotaLabel}!`,
+            type: "error",
             icon: "../public/assets/icons/error.svg" 
         });
     } finally {
