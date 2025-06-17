@@ -22,7 +22,7 @@ O sistema conta com:
 - Banco de dados SQLite, leve e ideal para uso offline com backup rápido.
 - Interface desktop criada com Electron.
 - Integração completa entre frontend e backend.
-- Telas para gerenciamento de **clientes**, **serviços**, **pedidos** e **relatório financeiro** com dashboards.
+- Telas para gerenciamento de **clientes**, **serviços**, **pedidos/gastos** e **relatório financeiro** com dashboards.
 
 Todo o projeto foi estruturado com base em conversas diretas com o cliente, entendendo os principais pontos de dor e aplicando boas práticas de desenvolvimento.
 

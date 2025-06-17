@@ -32,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
         // validações
         if (!pedidoData.nomeMaterial) {
             showAlert({
-                    message: `Nome do material é obrigatório.`,
+                    message: `Nome é obrigatório.`,
                     type: "error",
                     icon: "../public/assets/icons/error.svg"
             });
@@ -47,7 +47,7 @@ document.addEventListener("DOMContentLoaded", () => {
                 setTodayDate("data");
                 console.log(result.data);
                 showAlert({
-                    message: `Pedido de ${nomeMaterial.toUpperCase()} cadastrado com sucesso!`,
+                    message: `Gasto de ${nomeMaterial.toUpperCase()} cadastrado com sucesso!`,
                     type: "success",
                     icon: "../public/assets/icons/success.svg"
                 });

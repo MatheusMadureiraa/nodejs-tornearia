@@ -101,7 +101,7 @@
     box-shadow: 0 0 0 0.15rem rgba(1, 140, 24, 0.2); 
 }
 
-.form-modal-edicao .id-form {
+.form-modal-edicao .not-editable-input {
     width: 100%; 
     padding: 9px 12px; 
     border: 1px solid #dee2e6;
@@ -113,7 +113,7 @@
     cursor: not-allowed; 
     font-style: italic;
 }
-.form-modal-edicao .id-form:focus {
+.form-modal-edicao .not-editable-input:focus {
     border-color: #dee2e6;
     box-shadow: none;
 }
@@ -184,7 +184,7 @@
         font-size: 1.2em;
         margin-bottom: 15px;
     }
-    .form-modal-edicao .input-edicao, .form-modal-edicao .id-form {
+    .form-modal-edicao .input-edicao, .form-modal-edicao .not-editable-input {
         padding: 8px 10px;
         font-size: 0.9rem;
     }

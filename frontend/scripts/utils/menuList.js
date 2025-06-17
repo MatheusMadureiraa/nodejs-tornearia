@@ -41,7 +41,7 @@ async function obterDadosItem(idRota, id) {
 
 function obterRotaLabel(idRota) {
     if (idRota === 'idCliente') return "Cliente";
-    if (idRota === 'idPedido') return "Pedido";
+    if (idRota === 'idPedido') return "Gasto";
     if (idRota === 'idServico') return "Serviço"; 
     return "Item"; 
 }
@@ -103,8 +103,8 @@ function criarCampoFormulario(chave, valor) {
     let valorInput = (valor === null || valor === undefined) ? "" : valor;
     let inputClass = "input-edicao"; 
 
-    if (nomeCampo.startsWith("id")) {
-        inputClass = "id-form";
+    if (nomeCampo.startsWith("id") || nomeCampo.startsWith("status")) {
+        inputClass = "not-editable-input";
         return `
             <div class="form-group">
                 <label for="${chave}"><strong>${labelFormatada} (Não editável):</strong></label>
@@ -151,8 +151,8 @@ async function editarItem(idRota, id) {
         if (!informacao) {
             await showAlert({ 
                 message: `Nenhuma informação para editar o ${rotaLabel} com ID ${id}.`, 
-                type: "error", 
-                icon: "../public/assets/icons/error.svg" 
+                type: "error",
+                icon: "../public/assets/icons/error.svg"
             });
             return;
         }
