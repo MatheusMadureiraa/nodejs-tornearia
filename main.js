@@ -1,11 +1,11 @@
-const { app, BrowserWindow } = require("electron");
+const { app, BrowserWindow, ipcMain } = require("electron");
 const { exec, spawn } = require("child_process");
 const path = require("path");
 const isDev = !app.isPackaged;
-const { ipcMain } = require("electron");
 
 const serverPort = 3500;
 let backendProcess = null;
+let mainWindow = null;
 
 function startBackend() {
     console.log("🚀 Verificando se o backend já está rodando...");
@@ -54,11 +54,13 @@ function checkBackend(attempts = 5) {
 }
 
 const createWindow = () => {
-    const win = new BrowserWindow({
+    mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
+            nodeIntegration: false,
+            contextIsolation: true
         },
     });
 
@@ -66,12 +68,23 @@ const createWindow = () => {
         ? `file://${path.join(__dirname, "frontend", "views", "index.html")}`
         : `file://${path.join(app.getAppPath(), "frontend", "views", "index.html")}`;
 
-    win.loadURL(startUrl);
+    mainWindow.loadURL(startUrl);
+    
+    // Open DevTools in development
+    if (isDev) {
+        mainWindow.webContents.openDevTools();
+    }
 };
 
+// IPC handlers
 ipcMain.on("app:close", () => {
     const focusedWindow = BrowserWindow.getFocusedWindow();
     if (focusedWindow) focusedWindow.close();
+});
+
+ipcMain.on("app:restart", () => {
+    app.relaunch();
+    app.exit();
 });
 
 app.whenReady().then(() => {
@@ -91,4 +104,3 @@ app.on("window-all-closed", () => {
         app.quit();
     }
 });
-
