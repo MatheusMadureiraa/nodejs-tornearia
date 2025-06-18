@@ -6,8 +6,8 @@ const createNewClient = async (req, res) => {
     if (!req?.body?.nomeCliente || req.body.nomeCliente.trim() === '' || req.body.nomeCliente === null ) {
         return res.status(400).json({ message: 'Nome do cliente é obrigatório' });
     }
-    else if(req.body.nomeCliente.length < 3 || req.body.nomeCliente.length > 100  || /\d/.test(req.body.nomeCliente)) {
-        return res.status(400).json({ message: 'Nome do cliente deve ter entre 3 e 100 caracteres e não pode ser um número' });
+    else if(req.body.nomeCliente.length < 3 || req.body.nomeCliente.length > 100) {
+        return res.status(400).json({ message: 'Nome do cliente deve ter entre 3 e 100 caracteres' });
     }
     try {
         const clientName = req.body.nomeCliente;

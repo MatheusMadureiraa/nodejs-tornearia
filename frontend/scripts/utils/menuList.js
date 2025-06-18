@@ -67,9 +67,11 @@ async function verDetalhes(idRota, id) {
             .map(([chave, valor]) => {
                 let valorFormatado;
                 
-                if (chave === 'imagem' && valor) {
+                if (chave === 'imagem_path' && valor) {
                     // Special handling for image field
                     valorFormatado = `<div id="image-display-${id}"></div>`;
+                } else if (chave === 'imagem_path' && !valor) {
+                    valorFormatado = "<em>Imagem não cadastrada</em>";
                 } else {
                     valorFormatado = valor === null || valor === undefined ? 
                         "<em>Não cadastrado(a)</em>" : 
@@ -92,10 +94,10 @@ async function verDetalhes(idRota, id) {
                 </div>`;
                 
             // Display image if it exists
-            if (info.imagem) {
+            if (info.imagem_path) {
                 const imageContainer = document.getElementById(`image-display-${id}`);
                 if (imageContainer) {
-                    imageManager.displayStoredImage(info.imagem, imageContainer);
+                    imageManager.createImageLink(info.imagem_path, imageContainer);
                 }
             }
         }
@@ -158,12 +160,12 @@ function criarCampoFormulario(chave, valor, idRota) {
                     ${optionsHtml}
                 </select>
             </div>`;
-    } else if (nomeCampo === "imagem" && idRota === 'idServico') {
+    } else if (nomeCampo === "imagem_path" && idRota === 'idServico') {
         // Special handling for image field in services
         return `
             <div class="form-group">
-                <label for="${chave}"><strong>${labelFormatada}:</strong></label>
-                <input type="file" id="${chave}" name="${chave}" class="${inputClass}" accept="image/*" />
+                <label for="imagem"><strong>Nova Imagem:</strong></label>
+                <input type="file" id="imagem" name="imagem" class="${inputClass}" accept="image/*" />
                 <div id="image-preview-edit" style="margin-top: 10px;"></div>
                 ${valorInput ? `<div id="current-image-display" style="margin-top: 10px;"></div>` : ''}
             </div>`;
@@ -227,8 +229,8 @@ async function editarItem(idRota, id) {
                 imageManager.setupImageInput(imageInput, imagePreview);
             }
             
-            if (currentImageDisplay && informacao.imagem) {
-                imageManager.displayStoredImage(informacao.imagem, currentImageDisplay);
+            if (currentImageDisplay && informacao.imagem_path) {
+                imageManager.createImageLink(informacao.imagem_path, currentImageDisplay);
             }
         }
         
@@ -278,7 +280,7 @@ async function editarItem(idRota, id) {
                                 if (!validation.valid) {
                                     throw new Error(validation.error);
                                 }
-                                dadosAtualizados[input.name] = imageManager.convertToBase64(file);
+                                dadosAtualizados['imagem'] = await imageManager.convertToBase64(file);
                             }
                         } else {
                             dadosAtualizados[input.name] = input.value.trim() === "" ? null : input.value.trim();

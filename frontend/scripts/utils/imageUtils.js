@@ -76,7 +76,7 @@ export class ImageManager {
             return;
         }
 
-        // For base64 stored images
+        // For base64 stored images (legacy support)
         if (imagePath.startsWith('data:image/')) {
             container.innerHTML = `
                 <div style="text-align: center;">
@@ -85,8 +85,47 @@ export class ImageManager {
                 </div>
             `;
         } else {
-            container.innerHTML = '<p style="color: #666; font-style: italic;">Imagem não disponível</p>';
+            // For file system stored images
+            const imageUrl = `http://localhost:3500/servicos/images/${imagePath}`;
+            container.innerHTML = `
+                <div style="text-align: center;">
+                    <img src="${imageUrl}" 
+                         style="max-width: 200px; max-height: 150px; border: 1px solid #ccc; border-radius: 4px;"
+                         onerror="this.parentElement.innerHTML='<p style=\\"color: #666; font-style: italic;\\">Imagem não disponível</p>'">
+                    <br>
+                    <a href="${imageUrl}" target="_blank" style="font-size: 12px; color: #018c18; text-decoration: none;">
+                        📷 Abrir imagem em nova janela
+                    </a>
+                </div>
+            `;
         }
+    }
+
+    // Create a clickable link to open image in external application
+    createImageLink(imagePath, container) {
+        if (!imagePath) {
+            container.innerHTML = '<p style="color: #666; font-style: italic;">Imagem não cadastrada</p>';
+            return;
+        }
+
+        const imageUrl = `http://localhost:3500/servicos/images/${imagePath}`;
+        container.innerHTML = `
+            <div style="text-align: center; padding: 10px;">
+                <div style="border: 2px dashed #ccc; padding: 20px; border-radius: 8px;">
+                    <img src="../public/assets/icons/image-icon.svg" 
+                         style="width: 48px; height: 48px; opacity: 0.6;" 
+                         onerror="this.style.display='none'">
+                    <p style="margin: 10px 0 5px 0; font-weight: bold;">📷 Imagem do Serviço</p>
+                    <a href="${imageUrl}" target="_blank" 
+                       style="display: inline-block; padding: 8px 16px; background-color: #018c18; color: white; text-decoration: none; border-radius: 4px; font-size: 14px;">
+                        Abrir Imagem
+                    </a>
+                    <p style="font-size: 11px; color: #666; margin-top: 5px;">
+                        Clique para abrir a imagem em seu visualizador padrão
+                    </p>
+                </div>
+            </div>
+        `;
     }
 }
 

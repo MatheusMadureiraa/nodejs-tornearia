@@ -1,4 +1,4 @@
-import { realizarBackup } from '../scripts/utils/backupUtils.js';
+import { realizarBackup, restaurarBackup } from '../scripts/utils/backupUtils.js';
 
 window.onload = () => {
     fetch('../components/sidebar.html')
@@ -20,6 +20,12 @@ window.onload = () => {
             const backupBtn = document.getElementById('backup-btn');
             if (backupBtn) {
                 backupBtn.addEventListener('click', realizarBackup);
+            }
+
+            // Configurar botão de restaurar
+            const restoreBtn = document.getElementById('restore-btn');
+            if (restoreBtn) {
+                restoreBtn.addEventListener('click', restaurarBackup);
             }
         })
         .catch(error => console.error('Erro ao carregar o sidebar:', error));

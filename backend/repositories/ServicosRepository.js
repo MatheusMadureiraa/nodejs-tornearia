@@ -4,10 +4,10 @@ const create = (servico) => {
     const sql = `
         INSERT INTO servicos (
             nomeServico, preco, idCliente, pagamento, data, 
-            statusServico, statusPagamento, notaFiscal, observacao, imagem
+            statusServico, statusPagamento, notaFiscal, observacao, imagem_path
         ) VALUES (
             :nomeServico, :preco, :idCliente, :pagamento, :data, 
-            :statusServico, :statusPagamento, :notaFiscal, :observacao, :imagem
+            :statusServico, :statusPagamento, :notaFiscal, :observacao, :imagem_path
         )
     `;
 
@@ -21,7 +21,7 @@ const create = (servico) => {
         ":statusPagamento": servico.statusPagamento,
         ":notaFiscal": servico.notaFiscal,
         ":observacao": servico.observacao,
-        ":imagem": servico.imagem
+        ":imagem_path": servico.imagem_path
     }, "Não foi possível cadastrar o serviço, revise os dados digitados.");
 };
 
@@ -39,6 +39,18 @@ const findByClientId = (clientId) => {
     const sql = "SELECT * FROM servicos WHERE idCliente=?";
     return consulta(sql, clientId, "Erro ao buscar serviços do cliente");
 }
+
+const update = (id, servicoData) => {
+    const campos = Object.keys(servicoData);
+    const valores = Object.values(servicoData);
+    
+    const setClause = campos.map(campo => `${campo} = ?`).join(', ');
+    const sql = `UPDATE servicos SET ${setClause} WHERE idServico = ?`;
+    
+    const parametros = [...valores, id];
+    
+    return consulta(sql, parametros, "Não foi possível atualizar o serviço");
+};
 
 const patch = (id, camposAtualizar) => {
     if (!camposAtualizar || typeof camposAtualizar !== 'object' || Object.keys(camposAtualizar).length === 0) {
@@ -65,7 +77,7 @@ const deleteById = (id) => {
 }
 
 const ServicosRepository = {
-    create, findAll, findById, findByClientId, patch, deleteById
+    create, findAll, findById, findByClientId, update, patch, deleteById
 }
 
 module.exports = ServicosRepository;
