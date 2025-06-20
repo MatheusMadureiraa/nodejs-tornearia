@@ -8,7 +8,6 @@ class BackupHandler {
     constructor() {
         this.backupDir = path.join(__dirname, '..', 'backups');
         this.dbPath = path.join(__dirname, '..', 'database', 'tornearia.db');
-        this.imagesDir = path.join(__dirname, '..', 'uploads', 'images');
         this.ensureBackupDirExists();
     }
 
@@ -50,17 +49,12 @@ class BackupHandler {
                     archive.file(this.dbPath, { name: 'tornearia.db' });
                 }
 
-                // Add images directory if it exists
-                if (fs.existsSync(this.imagesDir)) {
-                    archive.directory(this.imagesDir, 'images');
-                }
-
                 // Add metadata file
                 const metadata = {
                     created: new Date().toISOString(),
                     version: '1.0.0',
-                    description: 'Vallim Tornearia System Backup',
-                    includes: ['database', 'images']
+                    description: 'Vallim Tornearia System Backup - Database Only',
+                    includes: ['database']
                 };
                 archive.append(JSON.stringify(metadata, null, 2), { name: 'backup-info.json' });
 
@@ -93,7 +87,6 @@ class BackupHandler {
 
                 // Validate backup contents
                 const dbBackupPath = path.join(tempRestoreDir, 'tornearia.db');
-                const imagesBackupDir = path.join(tempRestoreDir, 'images');
                 const metadataPath = path.join(tempRestoreDir, 'backup-info.json');
 
                 if (!fs.existsSync(dbBackupPath)) {
@@ -114,22 +107,8 @@ class BackupHandler {
                     fs.copyFileSync(this.dbPath, path.join(currentBackupDir, 'tornearia.db'));
                 }
 
-                if (fs.existsSync(this.imagesDir)) {
-                    fs.cpSync(this.imagesDir, path.join(currentBackupDir, 'images'), { recursive: true });
-                }
-
                 // Restore database
                 fs.copyFileSync(dbBackupPath, this.dbPath);
-
-                // Restore images
-                if (fs.existsSync(this.imagesDir)) {
-                    fs.rmSync(this.imagesDir, { recursive: true, force: true });
-                }
-                
-                if (fs.existsSync(imagesBackupDir)) {
-                    fs.mkdirSync(this.imagesDir, { recursive: true });
-                    fs.cpSync(imagesBackupDir, this.imagesDir, { recursive: true });
-                }
 
                 // Read metadata if available
                 let metadata = null;

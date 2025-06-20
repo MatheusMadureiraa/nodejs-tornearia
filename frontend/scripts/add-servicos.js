@@ -1,8 +1,7 @@
 import { criarServico } from "./api/servicosApi.js";
-import { formatarEntradaPreco, formatarNomeArquivo, formatarPreco, setTodayDate } from "./utils/formatacao.js";
+import { formatarEntradaPreco, formatarPreco, setTodayDate } from "./utils/formatacao.js";
 import { showAlert } from "./utils/alerts.js";
 import { AutocompleteComponent, getClientsForAutocomplete } from "./utils/autocomplete.js";
-import { imageManager } from "./utils/imageUtils.js";
 
 // evento de envio do formulário
 document.addEventListener("DOMContentLoaded", () => {
@@ -17,14 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
             console.log('Cliente selecionado:', selectedClient);
         }
     );
-
-    // Setup image input
-    const imageInput = document.getElementById("imagem");
-    const imagePreview = document.createElement('div');
-    imagePreview.id = 'image-preview';
-    imageInput.parentNode.appendChild(imagePreview);
-    
-    imageManager.setupImageInput(imageInput, imagePreview);
     
     const form = document.querySelector(".form-add");
 
@@ -39,7 +30,6 @@ document.addEventListener("DOMContentLoaded", () => {
         const data = document.getElementById("data").value;
         const notaFiscal = document.getElementById("notaFiscal").value.trim();
         const observacao = document.getElementById("observacao").value.trim();
-        const imagemFile = document.getElementById("imagem").files[0];
 
         if (!nomeServico || !nomeCliente || !preco) {
             showAlert({
@@ -51,30 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
         }
 
         const precoFormatado = preco.replace(",", ".");
-
-        let imagemBase64 = null;
-        if (imagemFile) {
-            const validation = imageManager.validateImageFile(imagemFile);
-            if (!validation.valid) {
-                showAlert({
-                    message: validation.error,
-                    type: "error",
-                    icon: "../public/assets/icons/error.svg"
-                });
-                return;
-            }
-            
-            try {
-                imagemBase64 = await imageManager.convertToBase64(imagemFile);
-            } catch (error) {
-                showAlert({
-                    message: "Erro ao processar a imagem.",
-                    type: "error",
-                    icon: "../public/assets/icons/error.svg"
-                });
-                return;
-            }
-        }
         
         const servicoData = {
             nomeServico,
@@ -83,8 +49,7 @@ document.addEventListener("DOMContentLoaded", () => {
             data,
             pagamento,
             notaFiscal,
-            observacao,
-            imagem: imagemBase64
+            observacao
         };
 
         // enviar para a API
@@ -100,7 +65,6 @@ document.addEventListener("DOMContentLoaded", () => {
                 });
                 form.reset();
                 setTodayDate("data");
-                imagePreview.innerHTML = '';
                 return;
             } else {
                 showAlert({
@@ -127,9 +91,4 @@ document.getElementById("preco").addEventListener("input", formatarEntradaPreco)
 // ajustar preço antes do envio
 document.querySelector("form").addEventListener("submit", function () {
     formatarPreco(document.getElementById("preco"));
-});
-
-// atualizar nome da selecao imagem ao selecionar arquivo
-document.getElementById("imagem").addEventListener("change", function () {
-    formatarNomeArquivo(this, document.getElementById("file-name"));
 });

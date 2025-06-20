@@ -1,6 +1,5 @@
 const ServicosRepository = require('../repositories/ServicosRepository.js');
 const ClientesRepository = require('../repositories/ClientesRepository.js');
-const imageHandler = require('../utils/imageHandler.js');
 
 const createNewService = async(req, res) => {
     if(!req?.body?.nomeServico || !req?.body?.preco || !req?.body?.nomeCliente) {
@@ -8,7 +7,7 @@ const createNewService = async(req, res) => {
     }
     else if(isNaN(req.body.preco) || req.body.preco < 0) return res.status(400).json({ message: 'Preço do serviço deve ser um número maior que zero'});
     try{
-        const { nomeServico, preco, pagamento, data, statusServico, statusPagamento, notaFiscal, observacao, imagem, nomeCliente} = req.body;
+        const { nomeServico, preco, pagamento, data, statusServico, statusPagamento, notaFiscal, observacao, nomeCliente} = req.body;
 
         let cliente = await ClientesRepository.findByName(nomeCliente);
 
@@ -19,17 +18,6 @@ const createNewService = async(req, res) => {
         }
 
         const currentDate = data || new Date().toISOString().split('T')[0];
-        
-        // Handle image if provided
-        let imagemPath = null;
-        if (imagem) {
-            try {
-                imagemPath = imageHandler.saveImageFromBase64(imagem);
-            } catch (imageError) {
-                console.error('Error saving image:', imageError);
-                return res.status(400).json({ message: 'Erro ao salvar imagem: ' + imageError.message });
-            }
-        }
 
         const servicoData = {
             nomeServico: nomeServico,
@@ -41,33 +29,12 @@ const createNewService = async(req, res) => {
             statusPagamento: statusPagamento || -1,
             notaFiscal: notaFiscal || null,
             observacao: observacao || null,
-            imagem_path: imagemPath
+            imagem_path: null
         };
 
         const result = await ServicosRepository.create(servicoData);
         if(!result){
-            // If service creation failed and we saved an image, clean it up
-            if (imagemPath) {
-                imageHandler.deleteImage(imagemPath);
-            }
             return res.status(400).json({ message: 'Não foi possível cadastrar o serviço no sistema'});
-        }
-
-        // Update the image filename with the service ID for better organization
-        if (imagemPath && result.lastID) {
-            try {
-                const newImagePath = imageHandler.generateUniqueFilename(imagemPath, result.lastID);
-                const oldPath = imageHandler.getImagePath(imagemPath);
-                const newPath = imageHandler.getImagePath(newImagePath);
-                
-                require('fs').renameSync(oldPath, newPath);
-                
-                // Update the database with the new filename
-                await ServicosRepository.patch(result.lastID, { imagem_path: newImagePath });
-            } catch (renameError) {
-                console.error('Error renaming image file:', renameError);
-                // Continue anyway, the service was created successfully
-            }
         }
         
         return res.status(201).json({ message: `Serviço ${nomeServico} cadastrado com sucesso.`});
@@ -118,7 +85,7 @@ const updateService = async (req, res) => {
             return res.status(404).json({ message: 'O serviço que tentou atualizar não está cadastrado no sistema' });
         }
 
-        const { nomeServico, nomeCliente, preco, pagamento, data, statusServico, statusPagamento, notaFiscal, observacao, imagem } = req.body;
+        const { nomeServico, nomeCliente, preco, pagamento, data, statusServico, statusPagamento, notaFiscal, observacao } = req.body;
         console.log("🔍 Dados recebidos no body:", req.body);
 
         if (!nomeServico) {
@@ -132,22 +99,6 @@ const updateService = async (req, res) => {
             return res.status(404).json({ message: `O cliente "${nomeCliente}" não está cadastrado no sistema` });
         }
 
-        // Handle image update
-        let imagemPath = servicoAtual.imagem_path; // Keep current image by default
-        if (imagem) {
-            try {
-                // Delete old image if it exists
-                if (servicoAtual.imagem_path) {
-                    imageHandler.deleteImage(servicoAtual.imagem_path);
-                }
-                // Save new image
-                imagemPath = imageHandler.saveImageFromBase64(imagem, id);
-            } catch (imageError) {
-                console.error('Error updating image:', imageError);
-                return res.status(400).json({ message: 'Erro ao atualizar imagem: ' + imageError.message });
-            }
-        }
-
         const servicoData = {
             nomeServico: nomeServico ?? servicoAtual.nomeServico,
             idCliente: nomeCliente ? cliente.idCliente : servicoAtual.idCliente,
@@ -158,7 +109,7 @@ const updateService = async (req, res) => {
             statusPagamento: statusPagamento ?? servicoAtual.statusPagamento,
             notaFiscal: notaFiscal ?? servicoAtual.notaFiscal,
             observacao: observacao ?? servicoAtual.observacao,
-            imagem_path: imagemPath
+            imagem_path: servicoAtual.imagem_path
         };
 
         Object.keys(servicoData).forEach((key) => {
@@ -223,21 +174,6 @@ const patchService = async (req, res) => {
                     return res.status(400).json({ message: 'Método de pagamento inválido. Use: Boleto, Cartão, Dinheiro ou Pix' });
                 }
                 cleanedFields[key] = value || 'Dinheiro';
-            } else if (key === 'imagem') {
-                // Handle image update
-                if (value) {
-                    try {
-                        // Delete old image if it exists
-                        if (servicoAtual.imagem_path) {
-                            imageHandler.deleteImage(servicoAtual.imagem_path);
-                        }
-                        // Save new image
-                        cleanedFields['imagem_path'] = imageHandler.saveImageFromBase64(value, id);
-                    } catch (imageError) {
-                        console.error('Error updating image:', imageError);
-                        return res.status(400).json({ message: 'Erro ao atualizar imagem: ' + imageError.message });
-                    }
-                }
             } else {
                 cleanedFields[key] = value;
             }
@@ -261,13 +197,6 @@ const deleteService = async (req, res) => {
     try{
         const id = req.params.idServico;
         
-        // Get service data to find associated image
-        const servico = await ServicosRepository.findById(id);
-        if (servico && servico.imagem_path) {
-            // Delete associated image file
-            imageHandler.deleteImage(servico.imagem_path);
-        }
-        
         const result = await ServicosRepository.deleteById(id);
         if(!result || result.changes === 0) return res.status(404).json({ message: 'O Serviço que tentou deletar não está cadastrado no sistema'});
 
@@ -277,40 +206,11 @@ const deleteService = async (req, res) => {
     }
 }
 
-// New endpoint to serve images
-const getServiceImage = async (req, res) => {
-    try {
-        const { filename } = req.params;
-        const imagePath = imageHandler.getImagePath(filename);
-        
-        if (!imagePath || !imageHandler.imageExists(filename)) {
-            return res.status(404).json({ message: 'Imagem não encontrada' });
-        }
-
-        // Set appropriate content type
-        const ext = require('path').extname(filename).toLowerCase();
-        const contentTypes = {
-            '.jpg': 'image/jpeg',
-            '.jpeg': 'image/jpeg',
-            '.png': 'image/png',
-            '.gif': 'image/gif',
-            '.webp': 'image/webp'
-        };
-
-        res.setHeader('Content-Type', contentTypes[ext] || 'application/octet-stream');
-        res.sendFile(imagePath);
-    } catch (error) {
-        console.error('Error serving image:', error);
-        res.status(500).json({ message: 'Erro ao carregar imagem' });
-    }
-};
-
 module.exports ={ 
     createNewService,
     getAllServices,
     getServiceById,
     updateService,
     patchService,
-    deleteService,
-    getServiceImage
+    deleteService
 }

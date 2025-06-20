@@ -2,7 +2,6 @@ import { editarClientePorId, excluirClientePorId, listarClientePorId } from '../
 import { editarPedidoPorId, excluirPedidoPorId, listarPedidoPorId } from '../api/pedidosApi.js';
 import { editarServicoPorId, excluirServicoPorId, listarServicoPorId } from '../api/servicosApi.js';
 import { showAlert } from './alerts.js';
-import { imageManager } from './imageUtils.js';
 
 // Variável para controlar o estado de submissão
 let isSubmitting = false;
@@ -64,19 +63,11 @@ async function verDetalhes(idRota, id) {
         }
 
         const detalhesHtml = Object.entries(info)
+            .filter(([chave]) => chave !== 'imagem_path') // Remove image field from details
             .map(([chave, valor]) => {
-                let valorFormatado;
-                
-                if (chave === 'imagem_path' && valor) {
-                    // Special handling for image field
-                    valorFormatado = `<div id="image-display-${id}"></div>`;
-                } else if (chave === 'imagem_path' && !valor) {
-                    valorFormatado = "<em>Imagem não cadastrada</em>";
-                } else {
-                    valorFormatado = valor === null || valor === undefined ? 
-                        "<em>Não cadastrado(a)</em>" : 
-                        (typeof valor === 'object' ? JSON.stringify(valor, null, 2) : valor);
-                }
+                const valorFormatado = valor === null || valor === undefined ? 
+                    "<em>Não cadastrado(a)</em>" : 
+                    (typeof valor === 'object' ? JSON.stringify(valor, null, 2) : valor);
                 
                 return `<li class="li-modal"><strong>${formatarTexto(chave)}:</strong> ${valorFormatado}</li>`;
             })
@@ -92,14 +83,6 @@ async function verDetalhes(idRota, id) {
                     <button class="button-modal button-delete" onclick="excluirItem('${idRota}', ${id})">Excluir</button>
                     <button type="button" class="button-modal button-close" onclick="fecharModal()">Fechar</button>
                 </div>`;
-                
-            // Display image if it exists
-            if (info.imagem_path) {
-                const imageContainer = document.getElementById(`image-display-${id}`);
-                if (imageContainer) {
-                    imageManager.createImageLink(info.imagem_path, imageContainer);
-                }
-            }
         }
         const modal = document.getElementById("modal-detalhes");
         if (modal) modal.style.display = "block";
@@ -131,6 +114,11 @@ function criarCampoFormulario(chave, valor, idRota) {
             </div>`;
     }
 
+    // Skip image field completely
+    if (nomeCampo === "imagem_path") {
+        return '';
+    }
+
     if (nomeCampo.includes("data")) {
         tipoInput = "date";
         valorInput = typeof valorInput === 'string' ? valorInput.split("T")[0] : "";
@@ -159,15 +147,6 @@ function criarCampoFormulario(chave, valor, idRota) {
                 <select id="${chave}" name="${chave}" class="${inputClass}">
                     ${optionsHtml}
                 </select>
-            </div>`;
-    } else if (nomeCampo === "imagem_path" && idRota === 'idServico') {
-        // Special handling for image field in services
-        return `
-            <div class="form-group">
-                <label for="imagem"><strong>Nova Imagem:</strong></label>
-                <input type="file" id="imagem" name="imagem" class="${inputClass}" accept="image/*" />
-                <div id="image-preview-edit" style="margin-top: 10px;"></div>
-                ${valorInput ? `<div id="current-image-display" style="margin-top: 10px;"></div>` : ''}
             </div>`;
     }
 
@@ -201,6 +180,7 @@ async function editarItem(idRota, id) {
 
         const formHtmlEdit = Object.entries(informacao)
             .map(([chave, valor]) => criarCampoFormulario(chave, valor, idRota))
+            .filter(html => html !== '') // Remove empty fields
             .join("");
         
         const detalhesContainer = document.getElementById("detalhes-container");
@@ -217,21 +197,6 @@ async function editarItem(idRota, id) {
                         <button type="button" class="button-modal button-close" onclick="fecharModal()" ${isSubmitting ? 'disabled' : ''}>Cancelar</button>
                     </div>
                 </form>`;
-        }
-        
-        // Setup image handling for services
-        if (idRota === 'idServico') {
-            const imageInput = document.getElementById('imagem');
-            const imagePreview = document.getElementById('image-preview-edit');
-            const currentImageDisplay = document.getElementById('current-image-display');
-            
-            if (imageInput && imagePreview) {
-                imageManager.setupImageInput(imageInput, imagePreview);
-            }
-            
-            if (currentImageDisplay && informacao.imagem_path) {
-                imageManager.createImageLink(informacao.imagem_path, currentImageDisplay);
-            }
         }
         
         const modal = document.getElementById("modal-detalhes");
@@ -272,16 +237,6 @@ async function editarItem(idRota, id) {
                             }
                         } else if (input.type === 'date' && input.value === '') {
                             dadosAtualizados[input.name] = null; 
-                        } else if (input.type === 'file') {
-                            // Handle image file
-                            if (input.files && input.files[0]) {
-                                const file = input.files[0];
-                                const validation = imageManager.validateImageFile(file);
-                                if (!validation.valid) {
-                                    throw new Error(validation.error);
-                                }
-                                dadosAtualizados['imagem'] = await imageManager.convertToBase64(file);
-                            }
                         } else {
                             dadosAtualizados[input.name] = input.value.trim() === "" ? null : input.value.trim();
                         }

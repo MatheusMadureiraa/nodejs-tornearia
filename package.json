@@ -1,7 +1,7 @@
 {
   "name": "tornearia-vallim",
   "version": "1.0.0",
-  "description": "Aplicativo desktop com Electron, SQLite3, Express, CORS e Dotenv",
+  "description": "Sistema de Gestão para Vallim Tornearia",
   "main": "main.js",
   "scripts": {
     "start": "electron .",
@@ -10,7 +10,8 @@
     "build": "electron-builder",
     "build-win": "electron-builder --win",
     "build-mac": "electron-builder --mac",
-    "build-linux": "electron-builder --linux"
+    "build-linux": "electron-builder --linux",
+    "dist": "electron-builder --publish=never"
   },
   "build": {
     "appId": "com.vallim.tornearia",
@@ -24,8 +25,13 @@
       "backend/**/*",
       "frontend/**/*",
       "package.json",
-      "!backend/uploads/temp/**/*",
-      "!backend/backups/**/*"
+      "!backend/uploads/**/*",
+      "!backend/backups/**/*",
+      "!backend/database/*.sqbpro",
+      "!tests/**/*",
+      "!assets/**/*",
+      "!*.md",
+      "!.gitignore"
     ],
     "extraResources": [
       {
@@ -33,26 +39,33 @@
         "to": "server",
         "filter": [
           "**/*",
-          "!uploads/temp/**/*",
-          "!backups/**/*"
+          "!uploads/**/*",
+          "!backups/**/*",
+          "!database/*.sqbpro"
         ]
       }
     ],
     "win": {
-      "target": "nsis",
-      "icon": "frontend/public/assets/logo.png"
+      "target": {
+        "target": "nsis",
+        "arch": ["x64", "ia32"]
+      },
+      "icon": "build/icon.ico"
     },
     "mac": {
       "target": "dmg",
-      "icon": "frontend/public/assets/logo.png"
+      "icon": "build/icon.icns"
     },
     "linux": {
       "target": "AppImage",
-      "icon": "frontend/public/assets/logo.png"
+      "icon": "build/icon.png"
     },
     "nsis": {
       "oneClick": false,
-      "allowToChangeInstallationDirectory": true
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Vallim Tornearia"
     }
   },
   "author": "Matheus Madureira",

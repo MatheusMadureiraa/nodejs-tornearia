@@ -12,7 +12,4 @@ router.route('/:idServico')
     .patch(servicosController.patchService)
     .delete(servicosController.deleteService);
 
-// Route to serve images
-router.get('/images/:filename', servicosController.getServiceImage);
-
 module.exports = router;
