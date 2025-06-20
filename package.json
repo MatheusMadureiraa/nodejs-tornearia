@@ -15,24 +15,16 @@
   },
   "build": {
     "appId": "com.vallim.tornearia",
-    "productName": "Vallim Tornearia",
+    "productName": "Tornearia",
     "directories": {
       "output": "dist"
     },
     "files": [
       "main.js",
       "preload.js",
-      "backend/**/*",
-      "frontend/**/*",
-      "package.json",
-      "!backend/uploads/**/*",
-      "!backend/backups/**/*",
-      "!backend/database/*.sqbpro",
-      "!tests/**/*",
-      "!assets/**/*",
-      "!*.md",
-      "!.gitignore"
+      "package.json"
     ],
+    
     "extraResources": [
       {
         "from": "backend",
@@ -42,6 +34,13 @@
           "!uploads/**/*",
           "!backups/**/*",
           "!database/*.sqbpro"
+        ]
+      },
+      {
+        "from": "frontend",
+        "to": "frontend",
+        "filter": [
+          "**/*"
         ]
       }
     ],
@@ -65,7 +64,7 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Vallim Tornearia"
+      "shortcutName": "Tornearia"
     }
   },
   "author": "Matheus Madureira",
