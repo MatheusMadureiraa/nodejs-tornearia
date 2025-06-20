@@ -43,7 +43,7 @@
     flex-grow: 1;
 }
 
-#menu li, #sair, #backup-btn {
+#menu li, #sair, #backup-btn, #restore-btn {
     padding: 15px 10px;
     cursor: pointer;
     font-size: max(15px, 1vw);
@@ -51,12 +51,12 @@
     transform-origin: left;
 }
 
-.itemWithBorder, #sair {
+.itemWithBorder, #sair, #restore-btn {
     border-top: #979797 1px solid;
     border-top-style:dotted;
 }
 
-#menu li:hover, #sair:hover, #backup-btn:hover {
+#menu li:hover, #sair:hover, #backup-btn:hover, #restore-btn:hover {
     animation: pulse 0.5s infinite alternate ease-in-out;
     transform: scaleX(1);
     font-weight: 400;
@@ -71,16 +71,15 @@
     }
 }
 
-#menu li img, #sair img, #backup-btn img {
+#menu li img, #sair img, #backup-btn img, #restore-btn img {
     font-size: max(20px, 1.6vw);
     padding-bottom: 5px;
     margin-right: 5px;
     vertical-align: middle;
 }
 
-#backup-btn {
+#backup-btn, #restore-btn {
     background: none;
-    border: none;
     width: 100%;
     text-align: left;
     display: flex;
@@ -90,12 +89,22 @@
     border-radius: 5px;
 }
 
-#backup-btn:active {
+#restore-btn{
+    border-bottom: none;
+    border-left: none;
+    border-right: none;
+}
+
+#backup-btn {
+    border: none;
+}
+
+#backup-btn:active, #restore-btn:active {
     background-color: #e0e0e0;
     transform: scale(0.98);
 }
 
-#backup-btn.loading {
+#backup-btn.loading, #restore-btn.loading {
     opacity: 0.6;
     pointer-events: none;
 }

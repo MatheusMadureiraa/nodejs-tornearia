@@ -78,4 +78,6 @@ As rotas da API foram testadas utilizando o Insomnia, simulando os fluxos princi
 ## 📌 Observações Finais
 Esse projeto foi desenvolvido como parte do meu processo de aprendizado e conclusão da graduação em Engenharia de Software. A ideia foi aplicar conceitos de backend, frontend, banco de dados e integração com Electron em um sistema real, que hoje já está em uso por uma tornearia local.
 
-### Fique à vontade para testar ou dar sugestões!
+## Attribute
+- **Icon**:
+<div> Icons made by <a href="https://www.flaticon.com/authors/riajulislam" title="riajulislam"> riajulislam </a> from <a href="https://www.flaticon.com/" title="Flaticon">www.flaticon.com'</a></div>
