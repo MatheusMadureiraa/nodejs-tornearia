@@ -1,11 +1,31 @@
 const { app, BrowserWindow, ipcMain } = require("electron");
 const { exec, spawn } = require("child_process");
 const path = require("path");
-const isDev = !app.isPackaged;
+const fs = require("fs");
 
+const isDev = !app.isPackaged;
 const serverPort = 3500;
 let backendProcess = null;
 let mainWindow = null;
+
+// Get correct paths for production and development
+function getResourcePath(relativePath) {
+    if (isDev) {
+        return path.join(__dirname, relativePath);
+    } else {
+        // In production, files are in the app.getAppPath()
+        return path.join(app.getAppPath(), relativePath);
+    }
+}
+
+function getBackendPath() {
+    if (isDev) {
+        return path.join(__dirname, "backend", "server.js");
+    } else {
+        // In production, backend is in the app resources
+        return path.join(app.getAppPath(), "backend", "server.js");
+    }
+}
 
 function startBackend() {
     console.log("🚀 Verificando se o backend já está rodando...");
@@ -18,16 +38,28 @@ function startBackend() {
         .on("error", () => {
             console.log("🛠️ Backend não encontrado. Iniciando agora...");
 
+            const serverPath = getBackendPath();
+            console.log("📁 Caminho do servidor:", serverPath);
+
+            // Verify server file exists
+            if (!fs.existsSync(serverPath)) {
+                console.error("❌ Arquivo do servidor não encontrado:", serverPath);
+                app.quit();
+                return;
+            }
+
             if (isDev) {
                 backendProcess = exec("npm run server", (err, stdout, stderr) => {
                     if (err) console.error(`❌ Erro ao iniciar o backend: ${stderr}`);
                     else console.log(`✅ Backend iniciado:\n${stdout}`);
                 });
             } else {
-                const serverPath = path.join(process.resourcesPath, "server", "server.js");
+                // Set working directory to the backend folder
+                const backendDir = path.dirname(serverPath);
                 backendProcess = spawn("node", [serverPath], { 
                     stdio: "inherit",
-                    detached: false
+                    detached: false,
+                    cwd: backendDir
                 });
             }
 
@@ -78,15 +110,39 @@ const createWindow = () => {
         show: false
     });
 
-    const startUrl = isDev
-        ? `file://${path.join(__dirname, "frontend", "views", "index.html")}`
-        : `file://${path.join(app.getAppPath(), "frontend", "views", "index.html")}`;
+    // Get the correct path to index.html
+    const frontendPath = getResourcePath(path.join("frontend", "views", "index.html"));
+    console.log("📁 Caminho do frontend:", frontendPath);
 
-    mainWindow.loadURL(startUrl);
+    // Verify frontend file exists
+    if (!fs.existsSync(frontendPath)) {
+        console.error("❌ Arquivo frontend não encontrado:", frontendPath);
+        
+        // Try alternative paths
+        const altPath1 = path.join(app.getAppPath(), "frontend", "views", "index.html");
+        const altPath2 = path.join(process.resourcesPath, "frontend", "views", "index.html");
+        
+        console.log("🔍 Tentando caminhos alternativos:");
+        console.log("Alt 1:", altPath1, "Existe:", fs.existsSync(altPath1));
+        console.log("Alt 2:", altPath2, "Existe:", fs.existsSync(altPath2));
+        
+        if (fs.existsSync(altPath1)) {
+            mainWindow.loadFile(altPath1);
+        } else if (fs.existsSync(altPath2)) {
+            mainWindow.loadFile(altPath2);
+        } else {
+            console.error("❌ Nenhum arquivo frontend encontrado!");
+            app.quit();
+            return;
+        }
+    } else {
+        mainWindow.loadFile(frontendPath);
+    }
     
     // Show window when ready to prevent visual flash
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
+        console.log("✅ Janela principal exibida");
     });
     
     // Open DevTools only in development
@@ -102,6 +158,11 @@ const createWindow = () => {
     // Prevent new window creation
     mainWindow.webContents.setWindowOpenHandler(() => {
         return { action: 'deny' };
+    });
+
+    // Add error handling for failed loads
+    mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
+        console.error('❌ Falha ao carregar:', errorCode, errorDescription, validatedURL);
     });
 };
 
@@ -149,6 +210,11 @@ ipcMain.on("app:restart", () => {
 
 // App event handlers
 app.whenReady().then(() => {
+    console.log("🚀 Aplicação Electron iniciada");
+    console.log("📁 App path:", app.getAppPath());
+    console.log("📁 Resources path:", process.resourcesPath);
+    console.log("🔧 Is packaged:", app.isPackaged);
+    
     startBackend();
     
     app.on("activate", () => {

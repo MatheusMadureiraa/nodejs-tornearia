@@ -1,7 +1,28 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
+const fs = require('fs');
 
-const dbPath = process.env.DB_PATH || path.resolve(__dirname, 'tornearia.db');
+// Get the correct database path for both development and production
+function getDatabasePath() {
+    if (process.env.NODE_ENV === 'production' || process.pkg) {
+        // In production, store database in user data directory
+        const { app } = require('electron');
+        const userDataPath = app ? app.getPath('userData') : path.join(require('os').homedir(), 'vallim-tornearia');
+        
+        // Ensure directory exists
+        if (!fs.existsSync(userDataPath)) {
+            fs.mkdirSync(userDataPath, { recursive: true });
+        }
+        
+        return path.join(userDataPath, 'tornearia.db');
+    } else {
+        // In development, use local path
+        return process.env.DB_PATH || path.resolve(__dirname, 'tornearia.db');
+    }
+}
+
+const dbPath = getDatabasePath();
+console.log('📁 Database path:', dbPath);
 
 let dbInstance = null;
 
@@ -12,6 +33,7 @@ const getDBConnection = () => {
                 console.error('Erro ao conectar ao banco de dados:', err.message);
             } else {
                 console.log('Conectado ao banco de dados SQLite.');
+                console.log('📁 Database location:', dbPath);
             }
         });
     }
