@@ -13,8 +13,8 @@ function getResourcePath(relativePath) {
     if (isDev) {
         return path.join(__dirname, relativePath);
     } else {
-        // In production, files are in the app.getAppPath()
-        return path.join(app.getAppPath(), relativePath);
+        // In production, use process.resourcesPath for asar unpacked files
+        return path.join(process.resourcesPath, 'app', relativePath);
     }
 }
 
@@ -23,7 +23,32 @@ function getBackendPath() {
         return path.join(__dirname, "backend", "server.js");
     } else {
         // In production, backend is in the app resources
-        return path.join(app.getAppPath(), "backend", "server.js");
+        return path.join(process.resourcesPath, 'app', "backend", "server.js");
+    }
+}
+
+function getDatabasePath() {
+    if (isDev) {
+        return path.join(__dirname, "backend", "database", "tornearia.db");
+    } else {
+        // In production, store database in user data directory
+        const userDataPath = app.getPath('userData');
+        const dbPath = path.join(userDataPath, 'tornearia.db');
+        
+        // Copy initial database if it doesn't exist
+        if (!fs.existsSync(dbPath)) {
+            const initialDbPath = path.join(process.resourcesPath, 'app', "backend", "database", "tornearia.db");
+            if (fs.existsSync(initialDbPath)) {
+                try {
+                    fs.copyFileSync(initialDbPath, dbPath);
+                    console.log("✅ Database copied to user data directory");
+                } catch (error) {
+                    console.error("❌ Error copying database:", error);
+                }
+            }
+        }
+        
+        return dbPath;
     }
 }
 
@@ -44,8 +69,34 @@ function startBackend() {
             // Verify server file exists
             if (!fs.existsSync(serverPath)) {
                 console.error("❌ Arquivo do servidor não encontrado:", serverPath);
-                app.quit();
-                return;
+                
+                // Try alternative paths
+                const altPaths = [
+                    path.join(__dirname, "backend", "server.js"),
+                    path.join(app.getAppPath(), "backend", "server.js"),
+                    path.join(process.resourcesPath, "backend", "server.js")
+                ];
+                
+                let foundPath = null;
+                for (const altPath of altPaths) {
+                    if (fs.existsSync(altPath)) {
+                        foundPath = altPath;
+                        console.log("✅ Found server at:", altPath);
+                        break;
+                    }
+                }
+                
+                if (!foundPath) {
+                    console.error("❌ Server file not found in any location");
+                    app.quit();
+                    return;
+                }
+            }
+
+            // Set environment variables for production
+            if (!isDev) {
+                process.env.DB_PATH = getDatabasePath();
+                process.env.NODE_ENV = 'production';
             }
 
             if (isDev) {
@@ -57,10 +108,28 @@ function startBackend() {
                 // Set working directory to the backend folder
                 const backendDir = path.dirname(serverPath);
                 backendProcess = spawn("node", [serverPath], { 
-                    stdio: "inherit",
+                    stdio: ["pipe", "pipe", "pipe"],
                     detached: false,
-                    cwd: backendDir
+                    cwd: backendDir,
+                    env: {
+                        ...process.env,
+                        DB_PATH: getDatabasePath(),
+                        NODE_ENV: 'production'
+                    }
                 });
+
+                // Log backend output for debugging
+                if (backendProcess.stdout) {
+                    backendProcess.stdout.on('data', (data) => {
+                        console.log(`Backend stdout: ${data}`);
+                    });
+                }
+
+                if (backendProcess.stderr) {
+                    backendProcess.stderr.on('data', (data) => {
+                        console.error(`Backend stderr: ${data}`);
+                    });
+                }
             }
 
             if (backendProcess) {
@@ -77,7 +146,7 @@ function startBackend() {
         });
 }
 
-function checkBackend(attempts = 10) {
+function checkBackend(attempts = 15) {
     require("http")
         .get(`http://localhost:${serverPort}`, () => {
             console.log("✅ Backend está rodando! Iniciando Electron...");
@@ -111,33 +180,37 @@ const createWindow = () => {
     });
 
     // Get the correct path to index.html
-    const frontendPath = getResourcePath(path.join("frontend", "views", "index.html"));
+    let frontendPath;
+    
+    if (isDev) {
+        frontendPath = path.join(__dirname, "frontend", "views", "index.html");
+    } else {
+        // Try multiple possible paths in production
+        const possiblePaths = [
+            path.join(process.resourcesPath, 'app', "frontend", "views", "index.html"),
+            path.join(app.getAppPath(), "frontend", "views", "index.html"),
+            path.join(__dirname, "frontend", "views", "index.html")
+        ];
+        
+        for (const possiblePath of possiblePaths) {
+            if (fs.existsSync(possiblePath)) {
+                frontendPath = possiblePath;
+                break;
+            }
+        }
+    }
+    
     console.log("📁 Caminho do frontend:", frontendPath);
 
     // Verify frontend file exists
-    if (!fs.existsSync(frontendPath)) {
+    if (!frontendPath || !fs.existsSync(frontendPath)) {
         console.error("❌ Arquivo frontend não encontrado:", frontendPath);
-        
-        // Try alternative paths
-        const altPath1 = path.join(app.getAppPath(), "frontend", "views", "index.html");
-        const altPath2 = path.join(process.resourcesPath, "frontend", "views", "index.html");
-        
-        console.log("🔍 Tentando caminhos alternativos:");
-        console.log("Alt 1:", altPath1, "Existe:", fs.existsSync(altPath1));
-        console.log("Alt 2:", altPath2, "Existe:", fs.existsSync(altPath2));
-        
-        if (fs.existsSync(altPath1)) {
-            mainWindow.loadFile(altPath1);
-        } else if (fs.existsSync(altPath2)) {
-            mainWindow.loadFile(altPath2);
-        } else {
-            console.error("❌ Nenhum arquivo frontend encontrado!");
-            app.quit();
-            return;
-        }
-    } else {
-        mainWindow.loadFile(frontendPath);
+        console.error("❌ Nenhum arquivo frontend encontrado!");
+        app.quit();
+        return;
     }
+
+    mainWindow.loadFile(frontendPath);
     
     // Show window when ready to prevent visual flash
     mainWindow.once('ready-to-show', () => {
@@ -213,7 +286,9 @@ app.whenReady().then(() => {
     console.log("🚀 Aplicação Electron iniciada");
     console.log("📁 App path:", app.getAppPath());
     console.log("📁 Resources path:", process.resourcesPath);
+    console.log("📁 User data path:", app.getPath('userData'));
     console.log("🔧 Is packaged:", app.isPackaged);
+    console.log("🔧 Is dev:", isDev);
     
     startBackend();
     

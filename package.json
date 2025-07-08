@@ -12,7 +12,8 @@
     "build-mac": "electron-builder --mac",
     "build-linux": "electron-builder --linux",
     "build-custom": "node scripts/build.js",
-    "dist": "electron-builder --publish=never"
+    "dist": "electron-builder --publish=never",
+    "postinstall": "electron-builder install-app-deps"
   },
   "build": {
     "appId": "com.vallim.tornearia",
@@ -29,7 +30,18 @@
       "!backend/uploads/**/*",
       "!backend/backups/**/*",
       "!backend/database/*.sqbpro",
-      "!backend/node_modules/**/*"
+      "!backend/node_modules/**/*",
+      "!node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "backend/database/tornearia.db",
+        "to": "app/backend/database/tornearia.db"
+      }
+    ],
+    "asarUnpack": [
+      "backend/**/*",
+      "frontend/**/*"
     ],
     "win": {
       "target": {
@@ -51,22 +63,28 @@
       "allowToChangeInstallationDirectory": true,
       "createDesktopShortcut": true,
       "createStartMenuShortcut": true,
-      "shortcutName": "Vallim Tornearia"
+      "shortcutName": "Vallim Tornearia",
+      "installerIcon": "build/icon.ico",
+      "uninstallerIcon": "build/icon.ico"
     }
   },
   "author": "Matheus Madureira",
   "license": "MIT",
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
   "dependencies": {
     "archiver": "^5.3.2",
     "cors": "^2.8.5",
     "dotenv": "^16.4.5",
     "express": "^4.18.4",
     "multer": "^1.4.5-lts.1",
-    "sqlite3": "5.0.2",
+    "sqlite3": "5.1.6",
     "unzipper": "^0.10.14"
   },
   "devDependencies": {
-    "electron": "16.0.0",
+    "electron": "22.3.27",
     "electron-builder": "^24.6.4",
     "electronmon": "^2.0.3"
   }
