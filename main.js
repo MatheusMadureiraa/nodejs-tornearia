@@ -8,13 +8,20 @@ const serverPort = 3500;
 let backendProcess = null;
 let mainWindow = null;
 
+// Enhanced logging function
+function log(message, type = 'info') {
+    const timestamp = new Date().toISOString();
+    const prefix = type === 'error' ? '❌' : type === 'warn' ? '⚠️' : '✅';
+    console.log(`[${timestamp}] ${prefix} ${message}`);
+}
+
 // Get correct paths for production and development
 function getResourcePath(relativePath) {
     if (isDev) {
         return path.join(__dirname, relativePath);
     } else {
-        // In production, use process.resourcesPath for asar unpacked files
-        return path.join(process.resourcesPath, 'app', relativePath);
+        // In production, files are unpacked due to asarUnpack configuration
+        return path.join(__dirname, relativePath);
     }
 }
 
@@ -22,8 +29,28 @@ function getBackendPath() {
     if (isDev) {
         return path.join(__dirname, "backend", "server.js");
     } else {
-        // In production, backend is in the app resources
-        return path.join(process.resourcesPath, 'app', "backend", "server.js");
+        // In production, backend is unpacked in the same directory structure
+        const backendPath = path.join(__dirname, "backend", "server.js");
+        log(`Looking for backend at: ${backendPath}`);
+        
+        if (fs.existsSync(backendPath)) {
+            return backendPath;
+        }
+        
+        // Fallback paths
+        const fallbackPaths = [
+            path.join(process.resourcesPath, 'app', "backend", "server.js"),
+            path.join(app.getAppPath(), "backend", "server.js")
+        ];
+        
+        for (const fallbackPath of fallbackPaths) {
+            log(`Trying fallback path: ${fallbackPath}`);
+            if (fs.existsSync(fallbackPath)) {
+                return fallbackPath;
+            }
+        }
+        
+        throw new Error("Backend server.js not found in any expected location");
     }
 }
 
@@ -35,15 +62,31 @@ function getDatabasePath() {
         const userDataPath = app.getPath('userData');
         const dbPath = path.join(userDataPath, 'tornearia.db');
         
+        log(`Database will be stored at: ${dbPath}`);
+        
+        // Ensure user data directory exists
+        if (!fs.existsSync(userDataPath)) {
+            fs.mkdirSync(userDataPath, { recursive: true });
+            log(`Created user data directory: ${userDataPath}`);
+        }
+        
         // Copy initial database if it doesn't exist
         if (!fs.existsSync(dbPath)) {
-            const initialDbPath = path.join(process.resourcesPath, 'app', "backend", "database", "tornearia.db");
-            if (fs.existsSync(initialDbPath)) {
-                try {
-                    fs.copyFileSync(initialDbPath, dbPath);
-                    console.log("✅ Database copied to user data directory");
-                } catch (error) {
-                    console.error("❌ Error copying database:", error);
+            const possibleInitialPaths = [
+                path.join(__dirname, "backend", "database", "tornearia.db"),
+                path.join(process.resourcesPath, 'app', "backend", "database", "tornearia.db"),
+                path.join(app.getAppPath(), "backend", "database", "tornearia.db")
+            ];
+            
+            for (const initialDbPath of possibleInitialPaths) {
+                if (fs.existsSync(initialDbPath)) {
+                    try {
+                        fs.copyFileSync(initialDbPath, dbPath);
+                        log(`Database copied from ${initialDbPath} to ${dbPath}`);
+                        break;
+                    } catch (error) {
+                        log(`Error copying database from ${initialDbPath}: ${error.message}`, 'error');
+                    }
                 }
             }
         }
@@ -52,118 +95,168 @@ function getDatabasePath() {
     }
 }
 
-function startBackend() {
-    console.log("🚀 Verificando se o backend já está rodando...");
-
-    require("http")
-        .get(`http://localhost:${serverPort}`, () => {
-            console.log("✅ Backend já está rodando! Pulando inicialização.");
-            createWindow();
-        })
-        .on("error", () => {
-            console.log("🛠️ Backend não encontrado. Iniciando agora...");
-
-            const serverPath = getBackendPath();
-            console.log("📁 Caminho do servidor:", serverPath);
-
-            // Verify server file exists
-            if (!fs.existsSync(serverPath)) {
-                console.error("❌ Arquivo do servidor não encontrado:", serverPath);
-                
-                // Try alternative paths
-                const altPaths = [
-                    path.join(__dirname, "backend", "server.js"),
-                    path.join(app.getAppPath(), "backend", "server.js"),
-                    path.join(process.resourcesPath, "backend", "server.js")
-                ];
-                
-                let foundPath = null;
-                for (const altPath of altPaths) {
-                    if (fs.existsSync(altPath)) {
-                        foundPath = altPath;
-                        console.log("✅ Found server at:", altPath);
-                        break;
-                    }
-                }
-                
-                if (!foundPath) {
-                    console.error("❌ Server file not found in any location");
-                    app.quit();
-                    return;
-                }
-            }
-
-            // Set environment variables for production
-            if (!isDev) {
-                process.env.DB_PATH = getDatabasePath();
-                process.env.NODE_ENV = 'production';
-            }
-
-            if (isDev) {
-                backendProcess = exec("npm run server", (err, stdout, stderr) => {
-                    if (err) console.error(`❌ Erro ao iniciar o backend: ${stderr}`);
-                    else console.log(`✅ Backend iniciado:\n${stdout}`);
-                });
-            } else {
-                // Set working directory to the backend folder
-                const backendDir = path.dirname(serverPath);
-                backendProcess = spawn("node", [serverPath], { 
-                    stdio: ["pipe", "pipe", "pipe"],
-                    detached: false,
-                    cwd: backendDir,
-                    env: {
-                        ...process.env,
-                        DB_PATH: getDatabasePath(),
-                        NODE_ENV: 'production'
-                    }
-                });
-
-                // Log backend output for debugging
-                if (backendProcess.stdout) {
-                    backendProcess.stdout.on('data', (data) => {
-                        console.log(`Backend stdout: ${data}`);
-                    });
-                }
-
-                if (backendProcess.stderr) {
-                    backendProcess.stderr.on('data', (data) => {
-                        console.error(`Backend stderr: ${data}`);
-                    });
-                }
-            }
-
-            if (backendProcess) {
-                backendProcess.on("exit", (code) => {
-                    console.log(`⚠️ Backend foi encerrado com código: ${code}`);
-                });
-
-                backendProcess.on("error", (err) => {
-                    console.error(`❌ Erro no processo do backend: ${err}`);
-                });
-            }
-
-            setTimeout(() => checkBackend(), 3000);
+function isPortInUse(port) {
+    return new Promise((resolve) => {
+        const net = require('net');
+        const server = net.createServer();
+        
+        server.listen(port, () => {
+            server.once('close', () => {
+                resolve(false); // Port is available
+            });
+            server.close();
         });
+        
+        server.on('error', () => {
+            resolve(true); // Port is in use
+        });
+    });
 }
 
-function checkBackend(attempts = 15) {
-    require("http")
-        .get(`http://localhost:${serverPort}`, () => {
-            console.log("✅ Backend está rodando! Iniciando Electron...");
-            createWindow();
-        })
-        .on("error", () => {
-            if (attempts > 0) {
-                console.log(`⏳ Backend ainda não iniciou... Tentando novamente (${attempts} tentativas restantes)`);
-                setTimeout(() => checkBackend(attempts - 1), 2000);
-            } else {
-                console.error("❌ Falha ao conectar ao backend. Verifique se ele está rodando.");
+async function startBackend() {
+    log("🚀 Starting backend initialization...");
+
+    // Check if port is already in use
+    const portInUse = await isPortInUse(serverPort);
+    if (portInUse) {
+        log(`Port ${serverPort} is already in use. Checking if it's our backend...`);
+        
+        // Test if it's our backend responding
+        require("http")
+            .get(`http://localhost:${serverPort}`, (res) => {
+                log("✅ Backend already running and responding! Skipping initialization.");
+                createWindow();
+            })
+            .on("error", () => {
+                log(`Port ${serverPort} is occupied by another service. Cannot start backend.`, 'error');
                 app.quit();
+            });
+        return;
+    }
+
+    try {
+        const serverPath = getBackendPath();
+        log(`Backend server path: ${serverPath}`);
+
+        // Verify server file exists
+        if (!fs.existsSync(serverPath)) {
+            throw new Error(`Backend server file not found at: ${serverPath}`);
+        }
+
+        // Set environment variables for production
+        const env = {
+            ...process.env,
+            NODE_ENV: isDev ? 'development' : 'production',
+            PORT: serverPort.toString()
+        };
+
+        if (!isDev) {
+            env.DB_PATH = getDatabasePath();
+        }
+
+        log(`Environment: ${env.NODE_ENV}`);
+        log(`Database path: ${env.DB_PATH || 'default'}`);
+
+        if (isDev) {
+            log("Starting backend in development mode...");
+            backendProcess = exec("npm run server", { env }, (err, stdout, stderr) => {
+                if (err) {
+                    log(`Error starting backend: ${stderr}`, 'error');
+                } else {
+                    log(`Backend output: ${stdout}`);
+                }
+            });
+        } else {
+            log("Starting backend in production mode...");
+            
+            // Get the directory containing the server file
+            const backendDir = path.dirname(serverPath);
+            log(`Backend working directory: ${backendDir}`);
+            
+            // Start the backend process
+            backendProcess = spawn("node", [serverPath], { 
+                stdio: ["pipe", "pipe", "pipe"],
+                detached: false,
+                cwd: backendDir,
+                env: env
+            });
+
+            // Enhanced logging for backend output
+            if (backendProcess.stdout) {
+                backendProcess.stdout.on('data', (data) => {
+                    const output = data.toString().trim();
+                    if (output) {
+                        log(`Backend stdout: ${output}`);
+                    }
+                });
             }
-        });
+
+            if (backendProcess.stderr) {
+                backendProcess.stderr.on('data', (data) => {
+                    const output = data.toString().trim();
+                    if (output) {
+                        log(`Backend stderr: ${output}`, 'warn');
+                    }
+                });
+            }
+        }
+
+        if (backendProcess) {
+            backendProcess.on("exit", (code, signal) => {
+                log(`Backend process exited with code: ${code}, signal: ${signal}`, code === 0 ? 'info' : 'error');
+            });
+
+            backendProcess.on("error", (err) => {
+                log(`Backend process error: ${err.message}`, 'error');
+            });
+
+            // Give the backend more time to start
+            log("Waiting for backend to start...");
+            setTimeout(() => checkBackend(), 5000);
+        }
+
+    } catch (error) {
+        log(`Failed to start backend: ${error.message}`, 'error');
+        app.quit();
+    }
+}
+
+function checkBackend(attempts = 20) {
+    log(`Checking backend connectivity... (${attempts} attempts remaining)`);
+    
+    const request = require("http").get(`http://localhost:${serverPort}`, (res) => {
+        log("✅ Backend is responding! Starting Electron window...");
+        createWindow();
+    });
+
+    request.on("error", (err) => {
+        if (attempts > 0) {
+            log(`Backend not ready yet (${err.code}). Retrying in 2 seconds...`, 'warn');
+            setTimeout(() => checkBackend(attempts - 1), 2000);
+        } else {
+            log("❌ Failed to connect to backend after multiple attempts.", 'error');
+            log("This usually means the backend process failed to start.", 'error');
+            
+            // Show error dialog to user
+            const { dialog } = require('electron');
+            dialog.showErrorBox(
+                'Erro de Inicialização',
+                'O servidor interno não conseguiu iniciar. Verifique se a porta 3500 está disponível e tente novamente.'
+            );
+            
+            app.quit();
+        }
+    });
+
+    // Set timeout for the request
+    request.setTimeout(5000, () => {
+        request.destroy();
+    });
 }
 
 const createWindow = () => {
+    log("Creating main window...");
+    
     mainWindow = new BrowserWindow({
         width: 1200,
         height: 800,
@@ -185,27 +278,30 @@ const createWindow = () => {
     if (isDev) {
         frontendPath = path.join(__dirname, "frontend", "views", "index.html");
     } else {
-        // Try multiple possible paths in production
-        const possiblePaths = [
-            path.join(process.resourcesPath, 'app', "frontend", "views", "index.html"),
-            path.join(app.getAppPath(), "frontend", "views", "index.html"),
-            path.join(__dirname, "frontend", "views", "index.html")
-        ];
+        // In production, frontend is unpacked in the same directory structure
+        frontendPath = path.join(__dirname, "frontend", "views", "index.html");
         
-        for (const possiblePath of possiblePaths) {
-            if (fs.existsSync(possiblePath)) {
-                frontendPath = possiblePath;
-                break;
+        if (!fs.existsSync(frontendPath)) {
+            // Try alternative paths
+            const possiblePaths = [
+                path.join(process.resourcesPath, 'app', "frontend", "views", "index.html"),
+                path.join(app.getAppPath(), "frontend", "views", "index.html")
+            ];
+            
+            for (const possiblePath of possiblePaths) {
+                if (fs.existsSync(possiblePath)) {
+                    frontendPath = possiblePath;
+                    break;
+                }
             }
         }
     }
     
-    console.log("📁 Caminho do frontend:", frontendPath);
+    log(`Frontend path: ${frontendPath}`);
 
     // Verify frontend file exists
     if (!frontendPath || !fs.existsSync(frontendPath)) {
-        console.error("❌ Arquivo frontend não encontrado:", frontendPath);
-        console.error("❌ Nenhum arquivo frontend encontrado!");
+        log(`Frontend file not found at: ${frontendPath}`, 'error');
         app.quit();
         return;
     }
@@ -215,7 +311,7 @@ const createWindow = () => {
     // Show window when ready to prevent visual flash
     mainWindow.once('ready-to-show', () => {
         mainWindow.show();
-        console.log("✅ Janela principal exibida");
+        log("✅ Main window displayed");
     });
     
     // Open DevTools only in development
@@ -235,20 +331,22 @@ const createWindow = () => {
 
     // Add error handling for failed loads
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
-        console.error('❌ Falha ao carregar:', errorCode, errorDescription, validatedURL);
+        log(`Failed to load: ${errorCode} ${errorDescription} ${validatedURL}`, 'error');
     });
 };
 
 // Gracefully shutdown backend process
 function shutdownBackend() {
     if (backendProcess) {
-        console.log("🛑 Encerrando backend...");
+        log("🛑 Shutting down backend...");
         
         if (process.platform === 'win32') {
             // For Windows, use taskkill to ensure process tree termination
             exec(`taskkill /pid ${backendProcess.pid} /T /F`, (error) => {
                 if (error) {
-                    console.error('Erro ao encerrar processo:', error);
+                    log(`Error terminating process: ${error.message}`, 'error');
+                } else {
+                    log("Backend process terminated successfully");
                 }
             });
         } else {
@@ -259,6 +357,7 @@ function shutdownBackend() {
             setTimeout(() => {
                 if (backendProcess && !backendProcess.killed) {
                     backendProcess.kill('SIGKILL');
+                    log("Backend process force killed");
                 }
             }, 5000);
         }
@@ -283,12 +382,14 @@ ipcMain.on("app:restart", () => {
 
 // App event handlers
 app.whenReady().then(() => {
-    console.log("🚀 Aplicação Electron iniciada");
-    console.log("📁 App path:", app.getAppPath());
-    console.log("📁 Resources path:", process.resourcesPath);
-    console.log("📁 User data path:", app.getPath('userData'));
-    console.log("🔧 Is packaged:", app.isPackaged);
-    console.log("🔧 Is dev:", isDev);
+    log("🚀 Electron application started");
+    log(`App path: ${app.getAppPath()}`);
+    log(`Resources path: ${process.resourcesPath}`);
+    log(`User data path: ${app.getPath('userData')}`);
+    log(`Is packaged: ${app.isPackaged}`);
+    log(`Is dev: ${isDev}`);
+    log(`Platform: ${process.platform}`);
+    log(`Architecture: ${process.arch}`);
     
     startBackend();
     

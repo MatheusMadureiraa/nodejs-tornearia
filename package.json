@@ -13,7 +13,8 @@
     "build-linux": "electron-builder --linux",
     "build-custom": "node scripts/build.js",
     "dist": "electron-builder --publish=never",
-    "postinstall": "electron-builder install-app-deps"
+    "postinstall": "electron-builder install-app-deps",
+    "clean": "rimraf dist node_modules/.cache"
   },
   "build": {
     "appId": "com.vallim.tornearia",
@@ -24,24 +25,19 @@
     "files": [
       "main.js",
       "preload.js",
-      "package.json",
-      "frontend/**/*",
-      "backend/**/*",
-      "!backend/uploads/**/*",
-      "!backend/backups/**/*",
-      "!backend/database/*.sqbpro",
-      "!backend/node_modules/**/*",
-      "!node_modules/**/*"
+      "package.json"
     ],
     "extraResources": [
       {
         "from": "backend/database/tornearia.db",
-        "to": "app/backend/database/tornearia.db"
+        "to": "app/backend/database/tornearia.db",
+        "filter": ["**/*"]
       }
     ],
     "asarUnpack": [
       "backend/**/*",
-      "frontend/**/*"
+      "frontend/**/*",
+      "node_modules/sqlite3/**/*"
     ],
     "win": {
       "target": {
@@ -65,7 +61,8 @@
       "createStartMenuShortcut": true,
       "shortcutName": "Vallim Tornearia",
       "installerIcon": "build/icon.ico",
-      "uninstallerIcon": "build/icon.ico"
+      "uninstallerIcon": "build/icon.ico",
+      "allowElevation": true
     }
   },
   "author": "Matheus Madureira",
@@ -86,6 +83,7 @@
   "devDependencies": {
     "electron": "22.3.27",
     "electron-builder": "^24.6.4",
-    "electronmon": "^2.0.3"
+    "electronmon": "^2.0.3",
+    "rimraf": "^3.0.2"
   }
 }
