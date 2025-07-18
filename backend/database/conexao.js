@@ -1,10 +1,11 @@
 const sqlite3 = require('sqlite3').verbose();
 const path = require('path');
 const fs = require('fs');
+const os = require('os');
 
 // Get the correct database path for both development and production
 function getDatabasePath() {
-    if (process.env.NODE_ENV === 'production' || process.pkg) {
+    if (process.env.NODE_ENV === 'production' || process.pkg || process.env.ELECTRON_RUN_AS_NODE) {
         // In production, store database in user data directory
         let userDataPath;
         
@@ -13,12 +14,13 @@ function getDatabasePath() {
             userDataPath = app ? app.getPath('userData') : path.join(require('os').homedir(), 'vallim-tornearia');
         } catch (error) {
             // Fallback if electron is not available
-            userDataPath = path.join(require('os').homedir(), 'vallim-tornearia');
+            userDataPath = path.join(os.homedir(), 'vallim-tornearia');
         }
         
         // Ensure directory exists
         if (!fs.existsSync(userDataPath)) {
             fs.mkdirSync(userDataPath, { recursive: true });
+            console.log(`Created user data directory: ${userDataPath}`);
         }
         
         return path.join(userDataPath, 'tornearia.db');
@@ -30,22 +32,69 @@ function getDatabasePath() {
 
 const dbPath = getDatabasePath();
 console.log('📁 Database path:', dbPath);
+console.log('📁 Database directory exists:', fs.existsSync(path.dirname(dbPath)));
+console.log('📁 Database file exists:', fs.existsSync(dbPath));
 
 let dbInstance = null;
 
 const getDBConnection = () => {
     if (!dbInstance) {
-        dbInstance = new sqlite3.Database(dbPath, (err) => {
+        // Add more detailed error handling for database connection
+        dbInstance = new sqlite3.Database(dbPath, sqlite3.OPEN_READWRITE | sqlite3.OPEN_CREATE, (err) => {
             if (err) {
                 console.error('Erro ao conectar ao banco de dados:', err.message);
+                console.error('Database path attempted:', dbPath);
+                console.error('Current working directory:', process.cwd());
+                console.error('User home directory:', os.homedir());
+                
+                // Try to create directory if it doesn't exist
+                const dbDir = path.dirname(dbPath);
+                if (!fs.existsSync(dbDir)) {
+                    try {
+                        fs.mkdirSync(dbDir, { recursive: true });
+                        console.log('Created database directory:', dbDir);
+                        
+                        // Retry connection
+                        dbInstance = new sqlite3.Database(dbPath, (retryErr) => {
+                            if (retryErr) {
+                                console.error('Retry connection failed:', retryErr.message);
+                                process.exit(1);
+                            } else {
+                                console.log('Database connection successful on retry');
+                                initializeTables();
+                            }
+                        });
+                    } catch (mkdirErr) {
+                        console.error('Failed to create database directory:', mkdirErr.message);
+                        process.exit(1);
+                    }
+                } else {
+                    process.exit(1);
+                }
             } else {
                 console.log('Conectado ao banco de dados SQLite.');
                 console.log('📁 Database location:', dbPath);
+                console.log('📁 Database size:', fs.existsSync(dbPath) ? fs.statSync(dbPath).size + ' bytes' : 'New database');
                 
                 // Initialize database tables if they don't exist
                 initializeTables();
             }
         });
+        
+        // Add database event handlers
+        if (dbInstance) {
+            dbInstance.on('error', (err) => {
+                console.error('Database error:', err.message);
+            });
+            
+            dbInstance.on('open', () => {
+                console.log('Database connection opened');
+            });
+            
+            dbInstance.on('close', () => {
+                console.log('Database connection closed');
+            });
+        }
     }
     return dbInstance;
 };
@@ -53,6 +102,8 @@ const getDBConnection = () => {
 // Initialize database tables
 function initializeTables() {
     const db = getDBConnection();
+    
+    console.log('Initializing database tables...');
     
     // Create tables if they don't exist
     const createTables = [
@@ -86,12 +137,23 @@ function initializeTables() {
         )`
     ];
     
-    createTables.forEach(sql => {
+    createTables.forEach((sql, index) => {
         db.run(sql, (err) => {
             if (err) {
-                console.error('Erro ao criar tabela:', err.message);
+                console.error(`Erro ao criar tabela ${index + 1}:`, err.message);
+            } else {
+                console.log(`Tabela ${index + 1} criada/verificada com sucesso`);
             }
         });
+    });
+    
+    // Verify tables were created
+    db.all("SELECT name FROM sqlite_master WHERE type='table'", (err, tables) => {
+        if (err) {
+            console.error('Error checking tables:', err.message);
+        } else {
+            console.log('Available tables:', tables.map(t => t.name).join(', '));
+        }
     });
 }
 

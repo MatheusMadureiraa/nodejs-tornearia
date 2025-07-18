@@ -7,6 +7,7 @@ const isDev = !app.isPackaged;
 const serverPort = 3500;
 let backendProcess = null;
 let mainWindow = null;
+let isShuttingDown = false;
 
 // Enhanced logging function
 function log(message, type = 'info') {
@@ -40,7 +41,8 @@ function getBackendPath() {
         // Fallback paths
         const fallbackPaths = [
             path.join(process.resourcesPath, 'app', "backend", "server.js"),
-            path.join(app.getAppPath(), "backend", "server.js")
+            path.join(app.getAppPath(), "backend", "server.js"),
+            path.join(process.resourcesPath, 'app.asar.unpacked', "backend", "server.js")
         ];
         
         for (const fallbackPath of fallbackPaths) {
@@ -115,6 +117,11 @@ function isPortInUse(port) {
 
 async function startBackend() {
     log("🚀 Starting backend initialization...");
+    
+    if (isShuttingDown) {
+        log("Application is shutting down, skipping backend start");
+        return;
+    }
 
     // Check if port is already in use
     const portInUse = await isPortInUse(serverPort);
@@ -129,7 +136,7 @@ async function startBackend() {
             })
             .on("error", () => {
                 log(`Port ${serverPort} is occupied by another service. Cannot start backend.`, 'error');
-                app.quit();
+                showErrorDialog('Port Error', `Port ${serverPort} is already in use by another application. Please close other applications and try again.`);
             });
         return;
     }
@@ -147,7 +154,8 @@ async function startBackend() {
         const env = {
             ...process.env,
             NODE_ENV: isDev ? 'development' : 'production',
-            PORT: serverPort.toString()
+            PORT: serverPort.toString(),
+            ELECTRON_RUN_AS_NODE: '1'
         };
 
         if (!isDev) {
@@ -156,12 +164,15 @@ async function startBackend() {
 
         log(`Environment: ${env.NODE_ENV}`);
         log(`Database path: ${env.DB_PATH || 'default'}`);
+        log(`Node.js version: ${process.version}`);
+        log(`Platform: ${process.platform} ${process.arch}`);
 
         if (isDev) {
             log("Starting backend in development mode...");
             backendProcess = exec("npm run server", { env }, (err, stdout, stderr) => {
                 if (err) {
                     log(`Error starting backend: ${stderr}`, 'error');
+                    showErrorDialog('Backend Error', 'Failed to start backend in development mode.');
                 } else {
                     log(`Backend output: ${stdout}`);
                 }
@@ -173,12 +184,18 @@ async function startBackend() {
             const backendDir = path.dirname(serverPath);
             log(`Backend working directory: ${backendDir}`);
             
+            // Use the bundled Node.js executable for better compatibility
+            const nodeExecutable = process.execPath;
+            log(`Using Node.js executable: ${nodeExecutable}`);
+            
             // Start the backend process
-            backendProcess = spawn("node", [serverPath], { 
+            backendProcess = spawn(nodeExecutable, [serverPath], { 
                 stdio: ["pipe", "pipe", "pipe"],
                 detached: false,
                 cwd: backendDir,
-                env: env
+                env: env,
+                windowsHide: true,
+                shell: false
             });
 
             // Enhanced logging for backend output
@@ -203,25 +220,34 @@ async function startBackend() {
 
         if (backendProcess) {
             backendProcess.on("exit", (code, signal) => {
-                log(`Backend process exited with code: ${code}, signal: ${signal}`, code === 0 ? 'info' : 'error');
+                const logType = (code === 0 || isShuttingDown) ? 'info' : 'error';
+                log(`Backend process exited with code: ${code}, signal: ${signal}`, logType);
+                
+                if (!isShuttingDown && code !== 0) {
+                    showErrorDialog('Backend Crashed', 'The backend process has crashed unexpectedly. The application will close.');
+                    setTimeout(() => app.quit(), 3000);
+                }
             });
 
             backendProcess.on("error", (err) => {
                 log(`Backend process error: ${err.message}`, 'error');
+                if (!isShuttingDown) {
+                    showErrorDialog('Backend Error', `Failed to start backend: ${err.message}`);
+                }
             });
 
             // Give the backend more time to start
             log("Waiting for backend to start...");
-            setTimeout(() => checkBackend(), 5000);
+            setTimeout(() => checkBackend(), 3000);
         }
 
     } catch (error) {
         log(`Failed to start backend: ${error.message}`, 'error');
-        app.quit();
+        showErrorDialog('Startup Error', `Failed to initialize backend: ${error.message}`);
     }
 }
 
-function checkBackend(attempts = 20) {
+function checkBackend(attempts = 30) {
     log(`Checking backend connectivity... (${attempts} attempts remaining)`);
     
     const request = require("http").get(`http://localhost:${serverPort}`, (res) => {
@@ -231,27 +257,29 @@ function checkBackend(attempts = 20) {
 
     request.on("error", (err) => {
         if (attempts > 0) {
-            log(`Backend not ready yet (${err.code}). Retrying in 2 seconds...`, 'warn');
-            setTimeout(() => checkBackend(attempts - 1), 2000);
+            log(`Backend not ready yet (${err.code}). Retrying in 1 second...`, 'warn');
+            setTimeout(() => checkBackend(attempts - 1), 1000);
         } else {
             log("❌ Failed to connect to backend after multiple attempts.", 'error');
             log("This usually means the backend process failed to start.", 'error');
             
-            // Show error dialog to user
-            const { dialog } = require('electron');
-            dialog.showErrorBox(
-                'Erro de Inicialização',
-                'O servidor interno não conseguiu iniciar. Verifique se a porta 3500 está disponível e tente novamente.'
+            showErrorDialog(
+                'Initialization Error',
+                'The internal server could not start. Please check if port 3500 is available and try again.\n\nIf the problem persists, try running as administrator.'
             );
-            
-            app.quit();
         }
     });
 
     // Set timeout for the request
-    request.setTimeout(5000, () => {
+    request.setTimeout(3000, () => {
         request.destroy();
     });
+}
+
+function showErrorDialog(title, message) {
+    const { dialog } = require('electron');
+    dialog.showErrorBox(title, message);
+    setTimeout(() => app.quit(), 2000);
 }
 
 const createWindow = () => {
@@ -265,11 +293,13 @@ const createWindow = () => {
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
             nodeIntegration: false,
-            contextIsolation: true
+            contextIsolation: true,
+            webSecurity: true
         },
         icon: path.join(__dirname, isDev ? "frontend/public/assets/logo.png" : "build/icon.png"),
         title: "Vallim Tornearia",
-        show: false
+        show: false,
+        autoHideMenuBar: true
     });
 
     // Get the correct path to index.html
@@ -285,7 +315,8 @@ const createWindow = () => {
             // Try alternative paths
             const possiblePaths = [
                 path.join(process.resourcesPath, 'app', "frontend", "views", "index.html"),
-                path.join(app.getAppPath(), "frontend", "views", "index.html")
+                path.join(app.getAppPath(), "frontend", "views", "index.html"),
+                path.join(process.resourcesPath, 'app.asar.unpacked', "frontend", "views", "index.html")
             ];
             
             for (const possiblePath of possiblePaths) {
@@ -302,7 +333,7 @@ const createWindow = () => {
     // Verify frontend file exists
     if (!frontendPath || !fs.existsSync(frontendPath)) {
         log(`Frontend file not found at: ${frontendPath}`, 'error');
-        app.quit();
+        showErrorDialog('Frontend Error', 'Frontend files not found. Please reinstall the application.');
         return;
     }
 
@@ -333,16 +364,29 @@ const createWindow = () => {
     mainWindow.webContents.on('did-fail-load', (event, errorCode, errorDescription, validatedURL) => {
         log(`Failed to load: ${errorCode} ${errorDescription} ${validatedURL}`, 'error');
     });
+    
+    // Handle unresponsive window
+    mainWindow.on('unresponsive', () => {
+        log('Main window became unresponsive', 'warn');
+    });
+    
+    mainWindow.on('responsive', () => {
+        log('Main window became responsive again');
+    });
 };
 
 // Gracefully shutdown backend process
 function shutdownBackend() {
+    isShuttingDown = true;
+    
     if (backendProcess) {
         log("🛑 Shutting down backend...");
         
         if (process.platform === 'win32') {
             // For Windows, use taskkill to ensure process tree termination
-            exec(`taskkill /pid ${backendProcess.pid} /T /F`, (error) => {
+            const killCommand = `taskkill /pid ${backendProcess.pid} /T /F`;
+            log(`Executing: ${killCommand}`);
+            exec(killCommand, (error) => {
                 if (error) {
                     log(`Error terminating process: ${error.message}`, 'error');
                 } else {
@@ -390,6 +434,9 @@ app.whenReady().then(() => {
     log(`Is dev: ${isDev}`);
     log(`Platform: ${process.platform}`);
     log(`Architecture: ${process.arch}`);
+    log(`Electron version: ${process.versions.electron}`);
+    log(`Chrome version: ${process.versions.chrome}`);
+    log(`Node version: ${process.versions.node}`);
     
     startBackend();
     
@@ -409,7 +456,14 @@ app.on("window-all-closed", () => {
 });
 
 app.on("before-quit", (event) => {
-    shutdownBackend();
+    if (backendProcess && !isShuttingDown) {
+        event.preventDefault();
+        isShuttingDown = true;
+        shutdownBackend();
+        setTimeout(() => {
+            app.quit();
+        }, 2000);
+    }
 });
 
 // Handle app termination signals
