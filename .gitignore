@@ -1,6 +1,46 @@
-node_modules
-
+# Dependencies
+node_modules/
 package-lock.json
-.env
 
+# Build outputs
+dist/
+build/
+*.exe
+*.dmg
+*.AppImage
+
+# Database files
+backend/database/tornearia.db
+backend/database/*.db
+
+# Uploads and backups
+backend/uploads/
+backend/backups/
+
+# Logs
+*.log
+logs/
+
+# Environment files
+.env
+.env.local
+.env.production
+
+# IDE files
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# OS files
 .DS_Store
+Thumbs.db
+desktop.ini
+
+# Temporary files
+tmp/
+temp/
+*.tmp
+
+# SQLite browser files
+*.sqbpro

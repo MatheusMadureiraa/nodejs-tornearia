@@ -5,16 +5,25 @@ const os = require('os');
 
 // Get the correct database path for both development and production
 function getDatabasePath() {
-    if (process.env.NODE_ENV === 'production' || process.pkg || process.env.ELECTRON_RUN_AS_NODE) {
+    const isProduction = process.env.NODE_ENV === 'production' || process.pkg || process.env.ELECTRON_RUN_AS_NODE;
+    
+    if (isProduction) {
         // In production, store database in user data directory
         let userDataPath;
         
         try {
-            const { app } = require('electron');
-            userDataPath = app ? app.getPath('userData') : path.join(require('os').homedir(), 'vallim-tornearia');
+            // Try to get Electron's userData path
+            if (process.env.ELECTRON_RUN_AS_NODE) {
+                // We're running as a child process of Electron
+                userDataPath = path.join(os.homedir(), 'AppData', 'Roaming', 'tornearia-vallim');
+            } else {
+                const { app } = require('electron');
+                userDataPath = app ? app.getPath('userData') : path.join(os.homedir(), 'AppData', 'Roaming', 'tornearia-vallim');
+            }
         } catch (error) {
             // Fallback if electron is not available
-            userDataPath = path.join(os.homedir(), 'vallim-tornearia');
+            console.log('Electron not available, using fallback path');
+            userDataPath = path.join(os.homedir(), 'AppData', 'Roaming', 'tornearia-vallim');
         }
         
         // Ensure directory exists
@@ -26,6 +35,8 @@ function getDatabasePath() {
         return path.join(userDataPath, 'tornearia.db');
     } else {
         // In development, use local path or environment variable
+        const devPath = process.env.DB_PATH || path.resolve(__dirname, 'tornearia.db');
+        console.log('Development database path:', devPath);
         return process.env.DB_PATH || path.resolve(__dirname, 'tornearia.db');
     }
 }

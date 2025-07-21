@@ -11,7 +11,7 @@ function log(message, type = 'info') {
 }
 
 // Log startup information
-log(`Starting server...`);
+log(`🚀 Starting server...`);
 log(`Node.js version: ${process.version}`);
 log(`Platform: ${process.platform}`);
 log(`Architecture: ${process.arch}`);
@@ -20,11 +20,11 @@ log(`Total memory: ${Math.round(os.totalmem() / 1024 / 1024)} MB`);
 log(`Free memory: ${Math.round(os.freemem() / 1024 / 1024)} MB`);
 log(`Working directory: ${process.cwd()}`);
 log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-log(`Database path: ${process.env.DB_PATH || 'default'}`);
 log(`Process ID: ${process.pid}`);
+log(`Electron run as node: ${process.env.ELECTRON_RUN_AS_NODE || 'false'}`);
 
 // Try to bind to localhost first, then fallback to all interfaces
-const server = app.listen(PORT, 'localhost', () => {
+const server = app.listen(PORT, '127.0.0.1', () => {
     log(`✅ Servidor rodando no endereço http://127.0.0.1:${PORT}`);
     log(`✅ Server is ready to accept connections`);
 }).on('error', (error) => {
@@ -35,6 +35,7 @@ const server = app.listen(PORT, 'localhost', () => {
         log(`Trying alternative port: ${altPort}`);
         const altServer = app.listen(altPort, 'localhost', () => {
             log(`✅ Server started on alternative port: http://127.0.0.1:${altPort}`);
+            log(`✅ Server is ready to accept connections`);
         });
         setupServerHandlers(altServer, altPort);
     } else if (error.code === 'EACCES') {
