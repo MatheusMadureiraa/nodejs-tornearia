@@ -3,7 +3,6 @@ const { spawn } = require("child_process");
 const path = require("path");
 const fs = require("fs");
 
-const isDev = !app.isPackaged;
 const serverPort = 3500;
 let backendProcess = null;
 let mainWindow = null;
@@ -15,11 +14,7 @@ function log(message) {
 
 // Get backend server path
 function getBackendPath() {
-    if (isDev) {
-        return path.join(__dirname, "backend", "server.js");
-    } else {
-        return path.join(__dirname, "backend", "server.js");
-    }
+    return path.join(__dirname, "backend", "server.js");
 }
 
 // Start backend server
@@ -36,20 +31,8 @@ async function startBackend() {
 
         const env = {
             ...process.env,
-            NODE_ENV: isDev ? 'development' : 'production',
             PORT: serverPort.toString()
         };
-
-        if (!isDev) {
-            // Set database path for production
-            const userDataPath = app.getPath('userData');
-            env.DB_PATH = path.join(userDataPath, 'tornearia.db');
-            
-            // Ensure user data directory exists
-            if (!fs.existsSync(userDataPath)) {
-                fs.mkdirSync(userDataPath, { recursive: true });
-            }
-        }
 
         backendProcess = spawn(process.execPath, [serverPath], {
             stdio: ["pipe", "pipe", "pipe"],
@@ -116,7 +99,8 @@ function createWindow() {
         webPreferences: {
             preload: path.join(__dirname, "preload.js"),
             nodeIntegration: false,
-            contextIsolation: true
+            contextIsolation: true,
+            webSecurity: false
         },
         icon: path.join(__dirname, "build", "icon.png"),
         title: "Vallim Tornearia",
@@ -138,10 +122,6 @@ function createWindow() {
         mainWindow.show();
         log("Window displayed");
     });
-
-    if (isDev) {
-        mainWindow.webContents.openDevTools();
-    }
 
     mainWindow.on('closed', () => {
         mainWindow = null;

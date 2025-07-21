@@ -7,14 +7,7 @@
     "start": "electron .",
     "server": "node backend/server.js",
     "dev": "npm start",
-    "build": "electron-builder",
-    "build-win": "electron-builder --win",
-    "build-mac": "electron-builder --mac",
-    "build-linux": "electron-builder --linux",
-    "build-custom": "node scripts/build.js",
-    "dist": "electron-builder --publish=never",
-    "postinstall": "electron-builder install-app-deps",
-    "clean": "rimraf dist node_modules/.cache"
+    "build": "electron-builder"
   },
   "build": {
     "appId": "com.vallim.tornearia",
@@ -23,31 +16,14 @@
       "output": "dist"
     },
     "files": [
-      "main.js",
-      "preload.js",
-      "package.json",
-      "backend/**/*",
-      "frontend/**/*",
-      "!backend/uploads/**/*",
-      "!backend/backups/**/*",
-      "!backend/database/*.sqbpro",
-      "!backend/node_modules/**/*"
+      "**/*"
     ],
-    "asarUnpack": [
-      "backend/**/*",
-      "frontend/**/*",
-      "node_modules/sqlite3/**/*"
-    ],
+
     "win": {
       "target": {
-        "target": "nsis",
-        "arch": [
-          "x64",
-          "ia32"
-        ]
+        "target": "nsis"
       },
       "icon": "build/icon.ico",
-      "requestedExecutionLevel": "asInvoker",
       "verifyUpdateCodeSignature": false
     },
     "mac": {
@@ -85,8 +61,8 @@
     "unzipper": "^0.10.14"
   },
   "devDependencies": {
-    "electron": "^22.3.27",
-    "electron-builder": "^24.6.4",
+    "electron": "13.6.9",
+    "electron-builder": "22.14.13",
     "electronmon": "^2.0.3",
     "rimraf": "^3.0.2"
   }

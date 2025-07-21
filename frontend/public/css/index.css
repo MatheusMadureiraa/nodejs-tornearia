@@ -23,7 +23,6 @@ body {
 #logo {
     width: max(200px, 22vw);
     position: absolute;
-    rotate: 30deg;
     top: 30px;
     left: 50%;
     transform: translateX(-50%);
