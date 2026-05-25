@@ -84,7 +84,7 @@ Legenda:
 | CT12 | Listar pedido sem nenhum ter sido cadastrado | ✅ |
 | CT13 | Listar todos os pedidos | ✅ |
 | CT14 | Listar pedido inexistente | ✅ |
-| CT15 | Editar pedido válido | ❌ |
+| CT15 | Editar pedido válido |✅|
 | CT16 | Editar pedido inexistente | ✅ |
 | CT17 | Deletar pedido válido | ✅ |
 | CT18 | Deletar pedido inexistente | ✅ |
@@ -98,7 +98,7 @@ Legenda:
 | CT21 | Criar serviço duplicado | ✅ |
 | CT22 | Listar todos os serviços | ✅ |
 | CT23 | Listar serviço inexistente | ✅ |
-| CT24 | Editar serviço válido | ❌ |
+| CT24 | Editar serviço válido | ✅ |
 | CT25 | Editar serviço inexistente | ✅ |
 | CT26 | Deletar serviço válido | ✅ |
 | CT27 | Deletar serviço inexistente | ✅ |

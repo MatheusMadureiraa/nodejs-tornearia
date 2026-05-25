@@ -1,7 +1,7 @@
 # Plano de Testes - Tornearia App
 
 
-## 🎯 Objetivos
+## Objetivos
 - Garantir a funcionalidade das rotas da API conforme os requisitos do sistema.
 - Verificar a integração entre as camadas frontend e backend.
 - Assegurar que os fluxos principais (CRUD de clientes, pedidos e serviços) funcionam corretamente.
@@ -9,7 +9,7 @@
 - Garantir que a API responde corretamente a cenários válidos e inválidos.
 
 
-## 🔍 Escopo
+## Escopo
 Os testes cobrirão os seguintes módulos:
 - **Clientes**: CRUD completo
 - **Pedidos**: CRUD completo
@@ -20,7 +20,7 @@ Serão realizados testes nos seguintes níveis:
 2. **Testes Automatizados** (Usando **Cypress** para E2E)
 
 
-## 🚀 Estratégia de Testes
+## Estratégia de Testes
 
 | Tipo de Teste | Ferramenta | Descrição |
 |--------------|-----------|------------|
@@ -30,14 +30,14 @@ Serão realizados testes nos seguintes níveis:
 | **Testes de Regressão** | Cypress | Execução automática antes de cada entrega |
 
 
-## 🛠️ Ferramentas Utilizadas
+## Ferramentas Utilizadas
 - [Insomnia](https://insomnia.rest/) → Testes manuais da API
 - [Cypress](https://www.cypress.io/) → Testes automatizados
 - SQLite → Banco de dados do sistema
 - Electron → Framework do app desktop
 
 
-## 📊 Matriz de Priorização de Testes
+## Matriz de Priorização de Testes
 
 | Funcionalidade                  | Rota            | Impacto | Probabilidade de Falha | Prioridade |
 |----------------------------------|----------------|--------|-----------------|------------|
@@ -63,21 +63,20 @@ Legenda:
 
 
 
-## 📑 Documentação usada para Testes
+## Documentação usada para Testes
 Os casos de teste foram definidos com base nos seguintes documentos:
 - **Requisitos do Sistema**
 - **Critérios de Aceitação (ACs)** para cada funcionalidade
 
 
-## ✅ Critérios de Aceitação dos Testes
+## Critérios de Aceitação dos Testes
 Os testes serão considerados **aprovados** se:
 - Todas as rotas CRUD funcionarem corretamente via Insomnia.
 - Fluxos principais (clientes, pedidos e serviços) estiverem funcionando via Cypress.
 - Nenhum erro crítico for encontrado nos testes automatizados.
 
 
-## 📆 Cronograma de Execução
-
+## Cronograma de Execução
 | Atividade | Responsável | Ferramenta | Prazo |
 |-----------|------------|------------|--------|
 | Configurar ambiente de testes | Dev/QA | - | 1 dia |
@@ -89,5 +88,5 @@ Os testes serão considerados **aprovados** se:
 Total: **6 dias** - que serão divididos conforme desenvolvimento de novas funcionalidades e interfaces.
 
 
-## 📝 Conclusão
+## Conclusão
 Este plano define a estratégia de testes do **Tornearia App**, garantindo que todas as funcionalidades essenciais sejam testadas. Com a combinação de **Insomnia** e **Cypress**, conseguiremos validar a API e a interface do usuário de forma eficiente.
