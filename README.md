@@ -230,5 +230,3 @@ Para usuários:
 - **Versão:** 1.0.0
 
 ---
-
-*README atualizado para incluir instruções de instalação do Playwright e informações sobre testes automatizados.*
