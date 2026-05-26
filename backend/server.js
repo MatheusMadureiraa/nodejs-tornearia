@@ -10,39 +10,26 @@ function log(message, type = 'info') {
     console.log(`[${timestamp}] ${prefix} [SERVER] ${message}`);
 }
 
-// Log startup information
-log(`🚀 Starting server...`);
-log(`Node.js version: ${process.version}`);
-log(`Platform: ${process.platform}`);
-log(`Architecture: ${process.arch}`);
-log(`OS: ${os.type()} ${os.release()}`);
-log(`Total memory: ${Math.round(os.totalmem() / 1024 / 1024)} MB`);
-log(`Free memory: ${Math.round(os.freemem() / 1024 / 1024)} MB`);
-log(`Working directory: ${process.cwd()}`);
-log(`Environment: ${process.env.NODE_ENV || 'development'}`);
-log(`Process ID: ${process.pid}`);
-log(`Electron run as node: ${process.env.ELECTRON_RUN_AS_NODE || 'false'}`);
-
 // Try to bind to localhost first, then fallback to all interfaces
 const server = app.listen(PORT, '127.0.0.1', () => {
-    log(`✅ Servidor rodando no endereço http://127.0.0.1:${PORT}`);
-    log(`✅ Server is ready to accept connections`);
+    log(`Servidor rodando no endereço http://127.0.0.1:${PORT}`);
+    log(`Server is ready to accept connections`);
 }).on('error', (error) => {
     if (error.code === 'EADDRINUSE') {
-        log(`❌ Port ${PORT} is already in use. Trying to find alternative...`, 'error');
+        log(`Port ${PORT} is already in use. Trying to find alternative...`, 'error');
         // Try alternative port
         const altPort = PORT + 1;
         log(`Trying alternative port: ${altPort}`);
         const altServer = app.listen(altPort, 'localhost', () => {
-            log(`✅ Server started on alternative port: http://127.0.0.1:${altPort}`);
-            log(`✅ Server is ready to accept connections`);
+            log(`Server started on alternative port: http://127.0.0.1:${altPort}`);
+            log(`Server is ready to accept connections`);
         });
         setupServerHandlers(altServer, altPort);
     } else if (error.code === 'EACCES') {
-        log(`❌ Permission denied to bind to port ${PORT}. Try running as administrator.`, 'error');
+        log(`Permission denied to bind to port ${PORT}. Try running as administrator.`, 'error');
         process.exit(1);
     } else {
-        log(`❌ Server error: ${error.message}`, 'error');
+        log(`Server error: ${error.message}`, 'error');
         process.exit(1);
     }
 });
@@ -51,11 +38,11 @@ function setupServerHandlers(serverInstance, port) {
     // Enhanced error handling
     serverInstance.on('error', (error) => {
         if (error.code === 'EADDRINUSE') {
-            log(`❌ Port ${port} is already in use. Please close other applications using this port.`, 'error');
+            log(`Port ${port} is already in use. Please close other applications using this port.`, 'error');
         } else if (error.code === 'EACCES') {
-            log(`❌ Permission denied to bind to port ${port}. Try running as administrator.`, 'error');
+            log(`Permission denied to bind to port ${port}. Try running as administrator.`, 'error');
         } else {
-            log(`❌ Server error: ${error.message}`, 'error');
+            log(`Server error: ${error.message}`, 'error');
         }
         process.exit(1);
     });
@@ -71,30 +58,30 @@ function setupServerHandlers(serverInstance, port) {
 
     // Graceful shutdown handling
     process.on('SIGTERM', () => {
-        log('🛑 SIGTERM received, shutting down gracefully...');
+        log('SIGTERM received, shutting down gracefully...');
         serverInstance.close(() => {
-            log('✅ Server closed successfully');
+            log('Server closed successfully');
             process.exit(0);
         });
     });
 
     process.on('SIGINT', () => {
-        log('🛑 SIGINT received, shutting down gracefully...');
+        log('SIGINT received, shutting down gracefully...');
         serverInstance.close(() => {
-            log('✅ Server closed successfully');
+            log('Server closed successfully');
             process.exit(0);
         });
     });
 
     // Handle uncaught exceptions
     process.on('uncaughtException', (error) => {
-        log(`❌ Uncaught Exception: ${error.message}`, 'error');
-        log(`❌ Stack: ${error.stack}`, 'error');
+        log(`Uncaught Exception: ${error.message}`, 'error');
+        log(`Stack: ${error.stack}`, 'error');
         process.exit(1);
     });
 
     process.on('unhandledRejection', (reason, promise) => {
-        log(`❌ Unhandled Rejection at: ${promise}, reason: ${reason}`, 'error');
+        log(`Unhandled Rejection at: ${promise}, reason: ${reason}`, 'error');
     });
 }
 

@@ -3,16 +3,13 @@ const path = require('path');
 const fs = require('fs');
 const os = require('os');
 
-// Get the correct database path for both development and production
 function getDatabasePath() {
     const isProduction = process.env.NODE_ENV === 'production' || process.pkg || process.env.ELECTRON_RUN_AS_NODE;
     
     if (isProduction) {
-        // In production, store database in user data directory
         let userDataPath;
         
         try {
-            // Try to get Electron's userData path
             if (process.env.ELECTRON_RUN_AS_NODE) {
                 // We're running as a child process of Electron
                 userDataPath = path.join(os.homedir(), 'AppData', 'Roaming', 'tornearia-vallim');

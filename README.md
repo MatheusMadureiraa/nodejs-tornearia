@@ -59,7 +59,7 @@ npm --version   # Deve retornar: 8.x.x
 
 ```bash
 # 1. Clone o repositório
-git clone https://github.com/seu-usuario/tornearia-vallim.git
+git clone https://github.com/MatheusMadureiraa/nodejs-tornearia.git
 
 # 2. Acesse a pasta do projeto
 cd tornearia-vallim
