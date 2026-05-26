@@ -20,6 +20,7 @@ Vallim Tornearia é um sistema de gestão desktop para tornearias locais. Ele of
 - [Solução de Problemas](#solução-de-problemas)
 - [Backup e Restauração](#backup-e-restauração)
 - [Suporte](#suporte)
+- [Documentação Técnica](./docs)
 
 ## Funcionalidades
 
@@ -49,6 +50,7 @@ Vallim Tornearia é um sistema de gestão desktop para tornearias locais. Ele of
 ```bash
 git clone https://github.com/MatheusMadureiraa/nodejs-tornearia.git
 cd nodejs-tornearia
+cd src
 npm install
 ```
 

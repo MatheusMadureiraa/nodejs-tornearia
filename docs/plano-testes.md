@@ -17,22 +17,20 @@ Os testes cobrirão os seguintes módulos:
 
 Serão realizados testes nos seguintes níveis:
 1. **Testes Manuais** (Usando **Insomnia**)
-2. **Testes Automatizados** (Usando **Cypress** para E2E)
+2. **Testes Automatizados** (Usando **Playwright**)
 
 
 ## Estratégia de Testes
 
 | Tipo de Teste | Ferramenta | Descrição |
 |--------------|-----------|------------|
-| **Testes de API** | Insomnia | Validação das rotas CRUD de clientes, pedidos e serviços |
-| **Testes Funcionais** | Cypress | Automação de fluxos principais |
-| **Testes de Interface** | Cypress | Validação da interface e usabilidade |
-| **Testes de Regressão** | Cypress | Execução automática antes de cada entrega |
+| **Testes de API** | Insomnia e Playwright | Validação das rotas CRUD de clientes, pedidos e serviços |
+| **Testes de Interface** | Manuais | Validação da interface e usabilidade |
 
 
 ## Ferramentas Utilizadas
 - [Insomnia](https://insomnia.rest/) → Testes manuais da API
-- [Cypress](https://www.cypress.io/) → Testes automatizados
+- [Playwright](https://playwright.dev/) → Testes automatizados
 - SQLite → Banco de dados do sistema
 - Electron → Framework do app desktop
 
@@ -62,17 +60,14 @@ Legenda:
 - 🟢 **Baixo** → Teste de menor impacto, pode ser testado com menor frequência.
 
 
-
 ## Documentação usada para Testes
 Os casos de teste foram definidos com base nos seguintes documentos:
 - **Requisitos do Sistema**
-- **Critérios de Aceitação (ACs)** para cada funcionalidade
-
 
 ## Critérios de Aceitação dos Testes
 Os testes serão considerados **aprovados** se:
 - Todas as rotas CRUD funcionarem corretamente via Insomnia.
-- Fluxos principais (clientes, pedidos e serviços) estiverem funcionando via Cypress.
+- Fluxos principais (clientes, pedidos e serviços) estiverem funcionando via Playwright.
 - Nenhum erro crítico for encontrado nos testes automatizados.
 
 
@@ -81,12 +76,4 @@ Os testes serão considerados **aprovados** se:
 |-----------|------------|------------|--------|
 | Configurar ambiente de testes | Dev/QA | - | 1 dia |
 | Testes de API (Insomnia) | QA | Insomnia | 1 dia |
-| Automação de Fluxos E2E | QA | Cypress | 2 dias |
-| Testes de Interface | QA | Cypress | 1 dia |
-| Ajustes e Reexecução | Dev/QA | Cypress | 1 dia |
-
-Total: **6 dias** - que serão divididos conforme desenvolvimento de novas funcionalidades e interfaces.
-
-
-## Conclusão
-Este plano define a estratégia de testes do **Tornearia App**, garantindo que todas as funcionalidades essenciais sejam testadas. Com a combinação de **Insomnia** e **Cypress**, conseguiremos validar a API e a interface do usuário de forma eficiente.
+| Tests automatizados API | QA | Playwright | 2 dias |
