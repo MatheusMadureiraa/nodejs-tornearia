@@ -10,7 +10,8 @@
     "build": "electron-builder",
     "build-win": "node scripts/build-production.js",
     "clean": "rimraf dist node_modules package-lock.json",
-    "rebuild": "npm run clean && npm install"
+    "rebuild": "npm run clean && npm install",
+    "test:api": "npx playwright test tests/api.spec.js"
   },
   "build": {
     "appId": "com.vallim.tornearia",
@@ -31,7 +32,6 @@
       "frontend/**/*",
       "node_modules/sqlite3/**/*"
     ],
-
     "win": {
       "target": {
         "target": "nsis"
@@ -74,6 +74,7 @@
     "unzipper": "^0.10.14"
   },
   "devDependencies": {
+    "@playwright/test": "^1.40.0",
     "electron": "13.6.9",
     "electron-builder": "22.14.13",
     "electronmon": "^2.0.3",
